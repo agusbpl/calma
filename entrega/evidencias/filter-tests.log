@@ -1,0 +1,19 @@
+✔ el perfil visitado es distinto de la cuenta logueada (8.908258ms)
+✔ no confunde rutas de Instagram con nombres de usuarios (11.98087ms)
+✔ la autoría se obtiene del encabezado y no de la cuenta propia (2.352883ms)
+✔ el botón publicar únicamente abre el compositor; no envía posts (1.935971ms)
+✔ conserva el bloqueo de la sección Reels (1.793ms)
+✔ no redirige el editor ni el perfil visitado al feed (2.944614ms)
+✔ un Reel sin gesto previo sigue bloqueado (5.298196ms)
+✔ un único Reel autorizado respeta barra final, pero otro no (2.726292ms)
+✔ la historia compartida está autorizada sólo si coincide el enlace (2.818133ms)
+✔ Explorar permanece bloqueado incluso con clip temporal (1.765804ms)
+✔ permite únicamente la ruta exacta del buscador de Instagram (9.348504ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 208.313961

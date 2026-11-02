@@ -1,0 +1,157 @@
+<proyecto>/app/src/main/AndroidManifest.xml:13: Warning: Should not restrict activity to fixed orientation. This may not be suitable for different form factors, causing the app to be letterboxed. [DiscouragedApi]
+            android:screenOrientation="unspecified"
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "DiscouragedApi":
+   Discouraged APIs are allowed and are not deprecated, but they may be unfit
+   for common use (e.g. due to slow performance or subtle behavior).
+
+<proyecto>/app/src/main/AndroidManifest.xml:7: Warning: The attribute android:allowBackup is deprecated from Android 12 and higher and may be removed in future versions. Consider adding the attribute android:dataExtractionRules specifying an @xml resource which configures cloud backups and device transfers on Android 12 and higher. [DataExtractionRules]
+        android:allowBackup="false"
+                             ~~~~~
+
+   Explanation for issues of type "DataExtractionRules":
+   Before Android 12, the attributes android:allowBackup and
+   android:fullBackupContent were used to configure all forms of backup,
+   including cloud backups, device-to-device transfers and adb backup.
+
+   In Android 12 and higher, these attributes have been deprecated and will
+   only apply to cloud backups. You should instead use the attribute
+   android:dataExtractionRules, specifying an @xml resource that configures
+   which files to back up, for cloud backups and for device-to-device
+   transfers, separately. If your minSdkVersion supports older versions,
+   you'll still want to specify an android:fullBackupContent resource if the
+   default behavior is not right for your app.
+
+   https://developer.android.com/about/versions/12/backup-restore#xml-changes
+   https://goo.gle/DataExtractionRules
+
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:503: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        publishButton.setText("✓ Salir");
+                              ~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:505: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        subtitle.setText("Modo publicación · Instagram web");
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:506: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        currentSection.setText("  Tocá Crear (+) si no se abre el editor automáticamente");
+                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:523: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Publicar: tocá Crear (+) en la web de Instagram");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:530: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                currentSection.setText("  Elegí fotos o videos y completá la publicación");
+                                       ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:551: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        publishButton.setText("＋ Publicar");
+                              ~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:553: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+        subtitle.setText("Instagram, sin el ruido");
+                         ~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:562: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Modo publicación · Instagram web");
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:563: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            if (createPending) currentSection.setText("  Publicar: tocá Crear (+) si no aparece solo");
+                                                      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:575: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            subtitle.setText("Viendo @" + user);
+                             ~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:575: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Viendo @" + user);
+                             ~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:576: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+            currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:576: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
+                                   ~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:576: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
+                                                          ~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:579: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Buscar en Instagram");
+                             ~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:580: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Buscá por nombre o parte del usuario");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:583: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Mensajes, sin distracciones");
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:584: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Mensajes privados · sin feed");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:587: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Video compartido · uno solo");
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:588: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Sin swipe · sonido dentro del visor");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:591: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Publicación · sin recomendaciones");
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:592: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Publicación · buscando el perfil de quien publicó");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:595: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Iniciá sesión en Instagram");
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:596: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Acceso directo a Instagram");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:599: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            subtitle.setText("Instagram, sin el ruido");
+                             ~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:600: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+            currentSection.setText("  Navegación intencional · sin Reels");
+                                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:650: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                        subtitle.setText("Viendo @" + user);
+                                         ~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:650: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        subtitle.setText("Viendo @" + user);
+                                         ~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:651: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                        currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:651: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
+                                               ~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:651: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
+                                                                      ~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:655: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                        subtitle.setText("Publicación de @" + user);
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:655: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        subtitle.setText("Publicación de @" + user);
+                                         ~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:656: Warning: Do not concatenate text displayed with setText. Use resource string with placeholders. [SetTextI18n]
+                        currentSection.setText("  Autor: @" + user + " · tocá para ver su perfil");
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:656: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        currentSection.setText("  Autor: @" + user + " · tocá para ver su perfil");
+                                               ~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:656: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        currentSection.setText("  Autor: @" + user + " · tocá para ver su perfil");
+                                                                     ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:658: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        subtitle.setText("Publicación · sin recomendaciones");
+                                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+<proyecto>/app/src/main/java/ar/com/calma/instagram/MainActivity.java:659: Warning: String literal in setText can not be translated. Use Android resources instead. [SetTextI18n]
+                        currentSection.setText("  Tocá el nombre del autor en Instagram para ver su perfil");
+                                               ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+   Explanation for issues of type "SetTextI18n":
+   When calling TextView#setText
+   * Never call Number#toString() to format numbers; it will not handle
+   fraction separators and locale-specific digits properly. Consider using
+   String#format with proper format specifications (%d or %f) instead.
+   * Do not pass a string literal (e.g. "Hello") to display text. Hardcoded
+   text can not be properly translated to other languages. Consider using
+   Android resource strings instead.
+   * Do not build messages by concatenating text chunks. Such messages can not
+   be properly translated.
+
+   https://developer.android.com/guide/topics/resources/localization.html
+
+0 errors, 40 warnings

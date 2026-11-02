@@ -1,0 +1,8 @@
+.gradle/
+**/build/
+local.properties
+*.jks
+*.keystore
+.codegraph/
+__pycache__/
+.venv/

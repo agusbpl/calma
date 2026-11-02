@@ -1,0 +1,4 @@
+PASS Android: button vuelve a cargar el chat de origen y elimina el carrusel. Cargas: 2
+PASS Android: back vuelve a cargar el chat de origen y elimina el carrusel. Cargas: 3
+PASS Android: Buscar desde el visor conserva el destino de búsqueda.
+Fixture local; no se inició sesión en Instagram ni se usaron videos privados.

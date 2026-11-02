@@ -1,0 +1,39 @@
+! CALMA para Firefox Android + uBlock Origin
+! Pegá estas reglas en uBlock Origin > Panel de control > Mis filtros > Aplicar cambios.
+! Exclusivas para instagram.com. No se ejecutan sobre otras webs.
+
+! Ocultar acceso a Reels, Explorar e Historias.
+instagram.com##a[href^="/reel/"]
+instagram.com##a[href^="/reels/"]
+instagram.com##a[href^="/explore/"]
+instagram.com##a[href^="/stories/"]
+instagram.com##a[href^="/tv/"]
+instagram.com##a[href^="/clips/"]
+instagram.com##a[href^="/accounts/activity/"]
+instagram.com##a[href*="instagram.com/reel/"]
+instagram.com##a[href*="instagram.com/reels/"]
+instagram.com##a[href*="instagram.com/explore/"]
+instagram.com##a[href*="instagram.com/stories/"]
+
+! Ocultar avisos para instalar o abrir Instagram como app.
+instagram.com##a[href^="intent:"]
+instagram.com##a[href^="instagram:"]
+instagram.com##a[href^="market:"]
+instagram.com##a[href*="play.google.com/store/apps/details"]
+instagram.com##a:has-text(/^Get (the )?app$/)
+instagram.com##a:has-text(/^Download (the )?app$/)
+instagram.com##a:has-text(/^Open (in|the) app$/)
+instagram.com##a:has-text(/^Abrir en (la )?app$/)
+instagram.com##a:has-text(/^Descargar (la )?app$/)
+instagram.com##button:has-text(/^Get the app$/)
+instagram.com##button:has-text(/^Descargar la aplicación$/)
+
+! Ocultar artículos con recomendaciones reconocibles por su etiqueta.
+instagram.com##article:has-text(/Suggested for you|Sugerencias para ti|Publicaciones sugeridas|Suggested posts/i)
+
+! En la portada /, ocultar el contenido principal para que no quede un feed infinito.
+! La página /direct/inbox/ sigue permitida para mensajes.
+instagram.com##:matches-path(/^\/$/) main
+
+! Si Instagram cambia el HTML, puede ser necesario actualizar selectores.
+! uBlock puede ocultar enlaces, pero NO garantiza bloquear navegación interna SPA.
