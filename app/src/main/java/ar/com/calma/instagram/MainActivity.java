@@ -210,7 +210,7 @@ public final class MainActivity extends Activity {
         toolbar.addView(makeButton("⌕ Buscar", this::openInstagramSearch),
                 new LinearLayout.LayoutParams(0, dp(49), .9f));
         TextView updatesButton = makeButton("♡", () -> {
-            String activity = "https://www.instagram.com/accounts/activity/";
+            String activity = "https://www.instagram.com/notifications/";
             if (publishingMode) confirmLeavePublishing(activity); else go(activity);
         });
         updatesButton.setContentDescription("Actualizaciones de Instagram");
@@ -632,7 +632,7 @@ public final class MainActivity extends Activity {
             currentPageKind = "messages";
             subtitle.setText("Mensajes, sin distracciones");
             currentSection.setText("  Mensajes privados · sin feed");
-        } else if (path.startsWith("/accounts/activity")) {
+        } else if ((path.equals("/notifications") || path.equals("/notifications/") || path.startsWith("/accounts/activity"))) {
             currentPageKind = "activity";
             subtitle.setText("Actividad de tu cuenta");
             currentSection.setText("  Actualizaciones · sin feed");
@@ -669,7 +669,7 @@ public final class MainActivity extends Activity {
         String user = matcher.group(1);
         String lower = user.toLowerCase(Locale.ROOT);
         if (java.util.Arrays.asList("p", "reel", "reels", "direct", "create", "explore",
-            "accounts", "stories", "tv", "clips", "about", "developer", "legal", "api",
+            "accounts", "stories", "tv", "clips", "notifications", "about", "developer", "legal", "api",
             "web", "privacy", "terms", "challenge", "graphql").contains(lower)) return "";
         return user;
     }

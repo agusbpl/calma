@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## 0.3.4 — Perfiles y notificaciones sin pantalla vacía
+
+- El filtro de instalación oculta sólo el enlace/botón, sin ocultar su contenedor compartido con contenido de Instagram.
+- Updates abre `/notifications/`; esa ruta deja de interpretarse como el perfil @notifications.
+- Regresión del contenido oculto reproducida antes del cambio y corregida con fixtures Chromium.
+
 ## 0.3.3 — Updates e historias elegidas desde perfiles
 
 - Acceso a actividad con ♡ Updates.

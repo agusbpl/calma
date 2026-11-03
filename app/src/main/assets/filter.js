@@ -55,6 +55,7 @@
       /^(descargar|instalar) (la )?(aplicación|app|instagram)$/i,
       /^usar (la )?app de instagram$/i,
       /^get instagram( app)?$/i,
+      /^use (the )?app$/i,
     ];
     const tags = document.querySelectorAll('a, button, [role="button"]');
     for (const el of tags) {
@@ -67,13 +68,8 @@
          /apps\.apple\.com\/.*instagram/.test(link);
       if (isAppLink || patterns.some(p => p.test(text))) {
         el.style.setProperty('display', 'none', 'important');
-        // Retirar la barra contenedora si es pequeña, nunca el login principal.
-        const parent = el.parentElement;
-        if (parent && parent.children.length <= 3 &&
-            (parent.textContent || '').trim().length < 125 &&
-            !parent.querySelector('input')) {
-          parent.style.setProperty('display', 'none', 'important');
-        }
+        // Instagram comparte contenedores con contenido aún en carga.
+        // Ocultar sólo el control: el tamaño/texto del padre no prueba que sea un banner.
       }
     }
   }
@@ -143,7 +139,7 @@
   // está visitando. No se envía nada fuera del teléfono.
   const RESERVED = new Set([
     'p','reel','reels','direct','create','explore','accounts','stories','tv','clips',
-    'about','developer','legal','api','web','privacy','terms','challenge','graphql'
+    'notifications','about','developer','legal','api','web','privacy','terms','challenge','graphql'
   ]);
   function profileFromPath(path) {
     const match = /^\/([a-z0-9._]{1,30})\/?$/i.exec(path || '');
@@ -174,6 +170,9 @@
     }
     const profile = profileFromPath(path);
     if (profile) return JSON.stringify({type:'profile', path, profile, author:''});
+    if (/^\/(?:notifications|accounts\/activity)\/?$/i.test(path)) {
+      return JSON.stringify({type:'activity', path, profile:'', author:''});
+    }
     if (isSearch(path)) return JSON.stringify({type:'search', path, profile:'', author:''});
     if (/^\/direct\//i.test(path)) {
       return JSON.stringify({type:'messages', path, profile:'', author:''});

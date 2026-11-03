@@ -1,6 +1,10 @@
-# calma. 0.3.3 — Instagram sin el ruido
+# calma. 0.3.4 — Instagram sin el ruido
 
 Cliente personal Android que utiliza **el sitio web de Instagram dentro de una WebView**. Sin servidor ni API privada. Prioriza mensajes, perfiles y la publicación intencional; permite updates e historias elegidas desde un perfil y bloquea el acceso al feed, Explorar y Reels. La sesión se guarda localmente en Android.
+
+## Corrección 0.3.4: perfiles y updates visibles
+
+El filtro de instalación ahora oculta sólo el control de «Usar la app», sin ocultar el contenedor donde Instagram carga perfiles o notificaciones. El corazón abre `/notifications/`, la ruta observada en la grabación, y se identifica como actividad.
 
 ## Novedad 0.3.3: updates e historias desde perfiles
 
@@ -36,9 +40,9 @@ elimina DRM ni restricciones del sitio.
 
 ## Instalar la última versión
 
-La entrega actual es **0.3.3** (versionCode 6): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
+La entrega actual es **0.3.4** (versionCode 7): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
 
-Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
+Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.4](entrega/Pruebas-0.3.4.md) registra la corrección actual. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
 
 ## Cambios conservados de la versión 0.2
 
@@ -152,4 +156,4 @@ El botón **← Chats** del visor y Atrás de Android cargan nuevamente la conve
 
 ## Versión conservada
 
-El repositorio contiene el código y la APK de 0.3.3; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.
+El repositorio contiene el código y la APK de 0.3.4; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.
