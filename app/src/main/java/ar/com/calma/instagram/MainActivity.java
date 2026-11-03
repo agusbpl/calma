@@ -65,6 +65,7 @@ public final class MainActivity extends Activity {
     private static final int ACCENT = Color.rgb(136, 215, 183);
     private static final int TEXT = Color.rgb(244, 245, 247);
 
+    private String viewerControlsScript;
     private FrameLayout contentFrame;
     private View cover;
     private WebView webView;
@@ -104,6 +105,7 @@ public final class MainActivity extends Activity {
         getWindow().setStatusBarColor(BG);
         getWindow().setNavigationBarColor(BG);
         getWindow().getDecorView().setSystemUiVisibility(0);
+        viewerControlsScript = readAsset("viewer-controls.js");
         filterScript = readAsset("filter.js");
         clipScript = readAsset("clip.js");
         profileStoriesScript = readAsset("profile-stories.js");
@@ -445,7 +447,7 @@ public final class MainActivity extends Activity {
             android.os.SystemClock.elapsedRealtime() <= clipArmExpiry + 120000)
             ? allowedClipPath : "";
         String story = mayOpenProfileStory(current) ? allowedProfileStoryPath : "";
-        String allScripts = "window.__calmaApprovedProfileStoryPath=" + JSONObject.quote(story) +
+        String allScripts = viewerControlsScript + "\nwindow.__calmaApprovedProfileStoryPath=" + JSONObject.quote(story) +
             ";\nwindow.__calmaReturnProfileUrl=" + JSONObject.quote(returnProfileUrl) + ";\n" +
             profileStoriesScript + "\nwindow.__calmaApprovedSingleClipPath=" +
             JSONObject.quote(allowed) + ";\nwindow.__calmaReturnChatUrl=" +

@@ -27,11 +27,15 @@ with sync_playwright() as p:
     page = browser.new_page(viewport={"width":390,"height":770}, is_mobile=True, has_touch=True)
     page.route('https://www.instagram.com/**', lambda r: r.fulfill(body=html, content_type='text/html; charset=utf-8'))
     page.goto('https://www.instagram.com/direct/t/test/')
+    page.add_script_tag(path=str(root / 'app/src/main/assets/viewer-controls.js'))
     page.add_script_tag(path=str(clipjs))
     assert page.locator('body.calma-chat').count() == 1
     page.get_by_role('link', name='Video compartido').click()
     page.wait_for_selector('#calma-single-clip video', timeout=3500)
     assert page.locator('#calma-single-clip video').count() == 1
+    assert page.locator('#calma-single-clip .calma-media-controls button svg').count() == 4
+    assert page.locator('#calma-single-clip').inner_text() == ''
+    assert not page.get_by_role('button', name='Volver a ver', exact=True).is_visible()
     assert page.evaluate('getComputedStyle(document.querySelector("#calma-single-clip video")).objectFit') == 'contain'
     assert page.evaluate('document.querySelector("#calma-single-clip").getBoundingClientRect().width') == 390
     assert page.evaluate('window.calls.some(x => x[0] === "active" && x[1] === true)')
@@ -47,6 +51,8 @@ with sync_playwright() as p:
     assert page.evaluate('document.querySelector("#calma-single-clip video").muted') is False
     page.evaluate('document.querySelector("#calma-single-clip video").dispatchEvent(new Event("ended", {bubbles:true}))')
     assert page.locator('#calma-single-clip.ended').count() == 1
+    assert page.get_by_role('button', name='Volver a ver', exact=True).is_visible()
+    assert page.locator('#calma-single-clip').inner_text() == ''
     page.get_by_role('button', name='Volver al chat').click()
     page.wait_for_function('!document.querySelector("#calma-single-clip")')
     assert page.locator('#mount > video#video').count() == 0

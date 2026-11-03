@@ -64,40 +64,6 @@
   }, true);
 
   const css = `
-    #calma-single-clip { position:fixed!important; inset:0!important;
-      z-index:2147483647!important; display:flex!important; flex-direction:column!important;
-      background:#050505!important; color:white!important; width:100vw!important;
-      height:100dvh!important; min-height:100vh!important; max-width:none!important;
-      overflow:hidden!important; touch-action:pan-x!important; font-family:system-ui,sans-serif!important;
-      box-sizing:border-box!important; }
-    #calma-single-clip * { box-sizing:border-box!important; }
-    #calma-single-clip .calma-clip-top, #calma-single-clip .calma-clip-bottom {
-      display:flex!important; flex:none!important; align-items:center!important; gap:12px!important;
-      min-height:56px!important; padding:8px 14px!important; background:#111318!important;
-      color:white!important; z-index:2!important; }
-    #calma-single-clip button { background:#25282c!important; border:0!important;
-      border-radius:12px!important; color:white!important; padding:11px 15px!important;
-      font:600 14px system-ui,sans-serif!important; min-height:44px!important; cursor:pointer!important; }
-    #calma-single-clip button:focus-visible { outline:2px solid #88d7b7!important; }
-    #calma-single-clip .calma-clip-screen { flex:1!important; display:flex!important;
-      align-items:center!important; justify-content:center!important; min-height:0!important;
-      min-width:0!important; overflow:hidden!important; background:#000!important;
-      position:relative!important; touch-action:pan-x!important; }
-    #calma-single-clip video { position:static!important; display:block!important;
-      width:100%!important; height:100%!important; max-width:100%!important;
-      max-height:100%!important; min-width:0!important; min-height:0!important;
-      transform:none!important; object-fit:contain!important; object-position:center!important;
-      margin:auto!important;
-      border:0!important; inset:auto!important; opacity:1!important;
-      visibility:visible!important; pointer-events:auto!important; }
-    #calma-single-clip .calma-clip-bottom { justify-content:space-between!important; }
-    #calma-single-clip .calma-clip-badge { font:500 12px system-ui,sans-serif!important;
-      color:#88d7b7!important; flex:1!important; white-space:nowrap!important; }
-    #calma-single-clip .calma-clip-finished { position:absolute!important; inset:0!important;
-      display:none!important; align-items:center!important; justify-content:center!important;
-      flex-direction:column!important; gap:16px!important; background:#111318f2!important;
-      font:500 16px system-ui,sans-serif!important; z-index:2!important; }
-    #calma-single-clip.ended .calma-clip-finished { display:flex!important; }
     body.calma-single-clip-open { overflow:hidden!important; overscroll-behavior:none!important; }
     body.calma-chat a[href^="/reel/"], body.calma-chat a[href^="/stories/"] {
       display:revert!important; visibility:visible!important; }
@@ -115,21 +81,10 @@
     if (label) node.textContent = label;
     return node;
   }
-  function button(label, callback) {
-    const node = element('button', '', label);
-    node.type = 'button'; node.addEventListener('click', callback); return node;
-  }
   function stopMedia() {
     if (player.video) {
       try { player.video.pause(); } catch (_) {}
     }
-  }
-  function endHandler(event) {
-    event?.stopImmediatePropagation?.();
-    event?.stopPropagation?.();
-    if (!active()) return;
-    stopMedia();
-    player.overlay.classList.add('ended');
   }
   function returnChatUrl() {
     const back = player.returnChatUrl || window.__calmaReturnChatUrl;
@@ -143,13 +98,13 @@
     if (!active() || player.closing) return false;
     player.closing = true;
     stopMedia();
-    player.video?.removeEventListener('ended', endHandler, true);
     // No devolver el video al modal/carrusel de Instagram. Mantener una tapa
     // hasta la nueva carga impide mostrar sugeridos incluso durante la salida.
     for (const video of document.querySelectorAll('video')) {
       try { video.pause(); } catch (_) {}
     }
-    const returning = element('div', 'calma-clip-top', 'Volviendo al chat…');
+    const returning = element('div');
+    returning.setAttribute('aria-label', 'Volviendo al chat');
     player.overlay.replaceChildren(returning);
     player.video = null;
     player.armedUntil = 0;
@@ -168,49 +123,19 @@
   function isolate(video) {
     if (!video || active() || !document.body) return false;
     player.video = video;
-    const overlay = element('div');
+    const overlay = element('div', 'calma-media-viewer');
     overlay.id = 'calma-single-clip';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-label', 'Video compartido: un solo clip');
-    const top = element('div', 'calma-clip-top');
-    top.appendChild(button('← Chats', close));
-    const title = element('span', '', 'Un solo video · sin sugeridos');
-    title.style.fontSize = '13px'; top.appendChild(title);
-    const screen = element('div', 'calma-clip-screen');
+    const screen = element('div', 'calma-media-screen');
     // Trasladar el MISMO elemento conserva la fuente de reproducción y evita
     // descargar enlaces privados o reconstruir streams blob:/MSE.
     video.setAttribute('playsinline','');
     video.setAttribute('webkit-playsinline','');
     video.controls = false;
     video.loop = false;
-    video.addEventListener('ended', endHandler, true);
     screen.appendChild(video);
-    const finished = element('div', 'calma-clip-finished', 'Video terminado');
-    finished.appendChild(button('↻ Volver a ver', () => {
-      overlay.classList.remove('ended');
-      try { video.currentTime = 0; video.play().catch(() => {}); } catch (_) {}
-    }));
-    finished.appendChild(button('← Volver al chat', close));
-    screen.appendChild(finished);
-    const bottom = element('div', 'calma-clip-bottom');
-    const state = element('span', 'calma-clip-badge', 'Sin swipe');
-    bottom.appendChild(state);
-    const play = button('Ⅱ Pausar', () => {
-      if (video.paused) { video.play().catch(() => {}); play.textContent = 'Ⅱ Pausar'; }
-      else { video.pause(); play.textContent = '▶ Reproducir'; }
-    });
-    video.addEventListener('play', () => { play.textContent='Ⅱ Pausar'; });
-    video.addEventListener('pause', () => { play.textContent='▶ Reproducir'; });
-    const sound = button(video.muted ? '🔇 Activar sonido' : '🔊 Sonido activo', () => {
-      // Gesto explícito: Chromium puede bloquear autoplay con audio hasta que se toque.
-      try {
-        video.muted = false; video.defaultMuted = false; video.volume = 1;
-        sound.textContent = video.muted ? '🔇 Activar sonido' : '🔊 Sonido activo';
-        if (video.paused) video.play().catch(() => {});
-      } catch (_) { sound.textContent = 'Audio no disponible'; }
-    });
-    bottom.appendChild(play); bottom.appendChild(sound);
-    overlay.appendChild(top); overlay.appendChild(screen); overlay.appendChild(bottom);
+    overlay.append(screen, window.__calmaViewerControls.controls(video, overlay, 'Volver al chat', close));
     document.body.appendChild(overlay);
     document.body.classList.add('calma-single-clip-open');
     player.overlay = overlay;

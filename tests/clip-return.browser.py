@@ -4,7 +4,7 @@ Fixture DOM local; no requiere cuenta ni tráfico real de Instagram.
 from pathlib import Path
 from playwright.sync_api import sync_playwright
 root = Path(__file__).resolve().parents[1]
-clip = (root / 'app/src/main/assets/clip.js').read_text()
+clip = (root / 'app/src/main/assets/viewer-controls.js').read_text() + '\n' + (root / 'app/src/main/assets/clip.js').read_text()
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path='/usr/bin/chromium', headless=True, args=['--no-sandbox'])
     for route_path in ['', '/p/SHARED123/', '/reel/SHARED123/']:
@@ -23,7 +23,7 @@ with sync_playwright() as p:
         page.goto('https://www.instagram.com/direct/t/123456/')
         page.locator('#shared').click()
         page.wait_for_selector('#calma-single-clip video')
-        page.get_by_role('button',name='← Chats',exact=True).click()
+        page.get_by_role('button',name='Volver al chat',exact=True).click()
         page.wait_for_function('!document.querySelector("#carousel")',timeout=2000)
         assert page.url=='https://www.instagram.com/direct/t/123456/', page.url
         print('PASS: cierre regresa al chat sin carrusel, ruta de visor:',route_path or 'Direct sin cambiar URL')

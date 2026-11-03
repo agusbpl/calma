@@ -72,35 +72,19 @@
     if (!source) return;
     overlay = document.createElement('div');
     overlay.id = 'calma-profile-story';
+    overlay.className = 'calma-media-viewer';
     overlay.setAttribute('role', 'dialog');
     overlay.setAttribute('aria-label', 'Historia elegida, sin avanzar');
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:2147483647;background:#111;color:white;display:flex;flex-direction:column;touch-action:none;';
-    const closeButton = document.createElement('button');
-    closeButton.textContent = '← Perfil · Elegir otra historia';
-    closeButton.style.cssText = 'padding:16px;background:#253c31;color:white;border:0;font-size:16px;';
-    closeButton.onclick = close;
     const media = source.cloneNode(true);
     if (source.tagName === 'VIDEO') {
       media.src = source.currentSrc || source.src;
       media.muted = source.muted;
       source.pause();
     }
-    media.style.cssText = 'width:100%;height:0;flex:1;min-height:0;object-fit:contain;position:static;transform:none;';
-    if (source.tagName === 'VIDEO') {
-      media.loop = false; media.controls = true;
-      media.addEventListener('ended', e => { e.stopImmediatePropagation(); media.pause(); }, true);
-      media.addEventListener('timeupdate', e => e.stopImmediatePropagation(), true);
-    }
-    overlay.append(closeButton, media);
-    const label = document.createElement('div');
-    label.textContent = 'Una historia · sin reproducción encadenada';
-    label.style.cssText = 'padding:12px;text-align:center;font:14px sans-serif;';
-    overlay.append(label);
-    if (media.tagName === 'VIDEO') {
-      media.addEventListener('error', () => {
-        label.textContent = 'Instagram no expuso un video reproducible. Volvé al perfil para elegir otra historia.';
-      });
-    }
+    const screen = document.createElement('div'); screen.className = 'calma-media-screen';
+    screen.append(media);
+    overlay.append(screen, window.__calmaViewerControls.controls(media, overlay, 'Volver al perfil', close));
+    if (media.tagName === 'VIDEO') media.addEventListener('timeupdate', e => e.stopImmediatePropagation(), true);
     for (const name of ['click','pointerdown','pointerup','touchstart','touchend']) {
       overlay.addEventListener(name, e => e.stopPropagation());
     }

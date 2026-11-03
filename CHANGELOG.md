@@ -1,5 +1,9 @@
 # Registro de cambios
 
+## 0.3.7 — Tema oscuro y controles esenciales
+
+- Historias y clips comparten controles SVG inferiores accesibles: volver, reproducción, sonido y repetir al terminar, sin carteles repetidos. Se conserva el bloqueo de avance.
+
 ## 0.3.6 — Una sola barra inferior de iconos
 
 - Cinco controles vectoriales sin etiquetas visibles: chats, buscar, updates, publicar y opciones; nombres accesibles conservados.
