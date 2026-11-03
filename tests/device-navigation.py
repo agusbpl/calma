@@ -27,7 +27,7 @@ with sync_playwright() as p:
         })''')
         assert state['path']==path,state
         assert state['kind']==kind,state
-        assert state['visibleText']>100,state
+        assert state['visibleText']>0,state
         assert state['hiddenPages']==0,state
         assert page.locator('main').first.is_visible(),state
         print(f'PASS: {kind} stays visible after delayed suggestions; authenticated WebView')

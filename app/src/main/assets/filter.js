@@ -167,6 +167,36 @@
     const match = /^\/([a-z0-9._]{1,30})\/?$/i.exec(path || '');
     return match && !RESERVED.has(match[1].toLowerCase()) ? match[1] : '';
   }
+  // Identify the signed-in account from Instagram's own account controls,
+  // never from the visited profile, posts, comments, or suggestions.
+  window.__calmaOwnProfile = () => {
+    for (const nav of document.querySelectorAll('[data-calma-navigation], nav, aside, [role="navigation"]')) {
+      if (!nav.hasAttribute('data-calma-navigation') &&
+          !(nav.querySelector('a[href="/"]') && nav.querySelector('a[href^="/direct/"]'))) continue;
+      for (const link of nav.querySelectorAll('a[href]')) {
+        try {
+          const url = new URL(link.href, location.href);
+          if (!isInstagramUrl(url.href)) continue;
+          const user = profileFromPath(url.pathname);
+          if (!user) continue;
+          const image = link.querySelector('img');
+          const icon = link.querySelector('svg[aria-label]');
+          if (image || /^(profile|perfil)$/i.test(icon?.getAttribute('aria-label') || '')) return user;
+        } catch (_) { /* Ignore invalid links. */ }
+      }
+    }
+    // Direct's inbox has an account switcher, even without global navigation.
+    if (/^\/direct\/inbox\/?$/i.test(location.pathname)) {
+      for (const heading of document.querySelectorAll('h1, h2')) {
+        const button = heading.closest('button, [role="button"]');
+        if (!button?.querySelector('svg[aria-label="Down chevron icon"], svg[aria-label="Icono de flecha hacia abajo"]')) continue;
+        const user = (heading.textContent || '').trim();
+        if (profileFromPath('/' + user + '/') === user) return user;
+      }
+    }
+    return '';
+  };
+
   function postAuthor() {
     // Elegir sólo enlaces del encabezado de una publicación para evitar
     // confundir autores de comentarios o cuentas recomendadas con el autor.
@@ -187,19 +217,20 @@
   }
   window.__calmaContext = () => {
     const path = location.pathname;
+    const own = window.__calmaOwnProfile();
     if (/^\/p\/[^/]+/i.test(path)) {
-      return JSON.stringify({type:'post', path, profile:'', author:postAuthor()});
+      return JSON.stringify({type:'post', path, own, profile:'', author:postAuthor()});
     }
     const profile = profileFromPath(path);
-    if (profile) return JSON.stringify({type:'profile', path, profile, author:''});
+    if (profile) return JSON.stringify({type:'profile', path, own, profile, author:''});
     if (/^\/(?:notifications|accounts\/activity)\/?$/i.test(path)) {
-      return JSON.stringify({type:'activity', path, profile:'', author:''});
+      return JSON.stringify({type:'activity', path, own, profile:'', author:''});
     }
-    if (isSearch(path)) return JSON.stringify({type:'search', path, profile:'', author:''});
+    if (isSearch(path)) return JSON.stringify({type:'search', path, own, profile:'', author:''});
     if (/^\/direct\//i.test(path)) {
-      return JSON.stringify({type:'messages', path, profile:'', author:''});
+      return JSON.stringify({type:'messages', path, own, profile:'', author:''});
     }
-    return JSON.stringify({type:'other', path, profile:'', author:''});
+    return JSON.stringify({type:'other', path, own, profile:'', author:''});
   };
 
   // Abrir el buscador propio de Instagram, sin consultar APIs ni recrear resultados.

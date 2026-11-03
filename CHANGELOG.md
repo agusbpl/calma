@@ -4,6 +4,9 @@
 
 - Historias y clips comparten controles SVG inferiores accesibles: volver, reproducción, sonido y repetir al terminar, sin carteles repetidos. Se conserva el bloqueo de avance.
 - Se ocultan tarjetas de cuentas sugeridas sólo dentro de colecciones identificadas; nunca se ocultan secciones completas. Selectores contrastados con notificaciones reales.
+- Modo oscuro predeterminado con cambio en vivo y preferencia persistente; fotos y videos conservan sus colores.
+- Mi perfil usa la cuenta identificada en controles de Instagram y una referencia temporal durante la ejecución, sin confundirla con el perfil visitado.
+- Menú reducido, apertura en navegador de la página actual y errores recuperables con reintento y límite de carga inicial de 25 segundos.
 
 ## 0.3.6 — Una sola barra inferior de iconos
 

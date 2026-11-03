@@ -1,6 +1,16 @@
-# calma. 0.3.6 — Instagram sin el ruido
+# calma. 0.3.7 — Instagram sin el ruido
 
 Cliente personal Android que utiliza **el sitio web de Instagram dentro de una WebView**. Sin servidor ni API privada. Prioriza mensajes, perfiles y la publicación intencional; permite updates e historias elegidas desde un perfil y bloquea el acceso al feed, Explorar y Reels. La sesión se guarda localmente en Android.
+
+## Novedades 0.3.7
+
+- **Modo oscuro** activado por defecto para Instagram y los controles de Calma. En **⋯ → Modo claro / Modo oscuro** se cambia sin recargar y la elección se conserva. Se usa la paleta del sitio, sin invertir fotos ni videos.
+- **⋯ → Mi perfil** abre la cuenta iniciada, identificada desde los controles de Instagram; no el perfil que se está visitando. El menú queda en Mi perfil, Recargar, Abrir en navegador, Tema y Cerrar sesión.
+- **Carga recuperable:** los fallos de conexión ofrecen reintentar. Una carga inicial detenida tiene un límite de 25 segundos.
+- **Visores coherentes:** historias y clips tienen los mismos iconos inferiores accesibles, sin carteles repetidos, y mantienen el bloqueo de avance.
+- **Sugerencias acotadas:** se ocultan tarjetas individuales dentro de colecciones identificadas. Las estructuras desconocidas se conservan para evitar ocultar contenido válido.
+
+[Verificación de 0.3.7](entrega/Pruebas-0.3.7.md).
 
 ## Interfaz 0.3.6: una sola barra de iconos
 
@@ -30,13 +40,13 @@ intenta abrir su **visor único**. A diferencia del reproductor original:
 - **Encuadre correcto:** extrae el elemento `<video>` ya cargado por Instagram y
   lo presenta a pantalla disponible con `object-fit: contain`: no recorta caras
   ni pone el video a un costado por los estilos de la web.
-- **Sonido:** botón **🔇 Activar sonido** con un toque explícito, volumen del
+- **Sonido:** icono de sonido (**Activar sonido** para lectores de pantalla) con un toque explícito, volumen del
   video al 100 %, y controles de pausa y reproducción. Asegurate de tener
   activado el **volumen multimedia** del celular; algunos videos no tienen audio.
 - **Sin swipe ni reproducción encadenada:** superpone su reproductor sobre el
   visor de Instagram, bloquea gestos de desplazamiento y, cuando termina,
-  muestra **Video terminado** y dos acciones: **Volver a ver / Volver al chat**.
-- **Vuelta al chat:** el botón **← Chats** y Atrás de Android recargan siempre el chat de origen y descartan el carrusel situado detrás.
+  aparece el icono **Repetir**; la flecha permite volver al chat.
+- **Vuelta al chat:** la flecha del visor y Atrás de Android recargan siempre el chat de origen y descartan el carrusel situado detrás.
 - **Por defecto sigue bloqueado:** entrar directamente a `/reels/`, Explorar,
   historias aleatorias u otros Reels sin un toque previo en un chat.
 - **Carga restringida:** si un Reel autorizado no expone un elemento `<video>`
@@ -50,14 +60,14 @@ elimina DRM ni restricciones del sitio.
 
 ## Instalar la última versión
 
-La entrega actual es **0.3.6** (versionCode 9): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
+La entrega actual es **0.3.7** (versionCode 10): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
 
-Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.6](entrega/Pruebas-0.3.6.md) registra la entrega actual. El [informe de 0.3.5](entrega/Pruebas-0.3.5.md) conserva la validación del filtro en una sesión real. El [informe de 0.3.4](entrega/Pruebas-0.3.4.md) conserva las pruebas previas. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
+Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.7](entrega/Pruebas-0.3.7.md) registra la entrega actual. El [informe de 0.3.6](entrega/Pruebas-0.3.6.md) conserva la validación de la barra de iconos. El [informe de 0.3.5](entrega/Pruebas-0.3.5.md) conserva la validación del filtro en una sesión real. El [informe de 0.3.4](entrega/Pruebas-0.3.4.md) conserva las pruebas previas. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
 
 ## Cambios conservados de la versión 0.2
 
 - **＋ Publicar**: abre Instagram web en modo escritorio y **trata de abrir automáticamente su menú Crear**. Si Instagram cambia su interfaz y el clic automático no se encuentra, tocá **Crear (+)** dentro de la página. Los archivos se eligen desde el selector del teléfono; las publicaciones se confirman desde el editor de Instagram, nunca desde Calma automáticamente.
-- **Perfil actual y autor de publicaciones**: en **⋯ → Ver perfil actual** se puede volver al perfil visitado o al autor del post si Instagram expone su enlace en el encabezado. Si no se puede identificar, no se inventa un usuario.
+- **Mi perfil**: desde opciones se abre la cuenta iniciada. Los perfiles ajenos y autores de publicaciones se abren tocando sus nombres dentro de Instagram.
 - **Navegación dinámica**: detecta cambios de perfiles realizados por Instagram sin recargar la página (SPA).
 - **Protección al salir del editor**: antes de abandonar el modo de publicación, avisa que un borrador sin terminar podría perderse.
 - **Reintentar creación**: botón `⋯ → Reintentar abrir Crear` durante la edición.
@@ -66,9 +76,9 @@ Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha
 
 1. Iniciá sesión normalmente en la página de Instagram que aparece al abrir Calma.
 2. Tocá **Chats** para mensajes o **Buscar** para abrir el buscador oficial de Instagram y encontrar cuentas por nombre o parte del usuario. También podés abrir otros perfiles desde la propia web.
-3. El nombre del perfil se ve dentro de Instagram. **⋯ → Ver perfil actual** permite volver a abrirlo.
-4. Al abrir una foto/publicación, **⋯ → Ver perfil actual** intenta abrir el autor del post si su enlace está disponible.
-5. Si te comparten un video en un chat, tocá su miniatura y después **Activar sonido** si aparece silenciado. El botón **← Chats** te devuelve a la conversación.
+3. El nombre del perfil se ve dentro de Instagram. Para abrir tu propia cuenta, usá **⋯ → Mi perfil**.
+4. Al abrir una foto/publicación, tocá el nombre del autor dentro de Instagram para abrir su perfil.
+5. Si te comparten un video en un chat, tocá su miniatura y después **Activar sonido** si aparece silenciado. La flecha del visor te devuelve a la conversación.
 6. Para publicar, tocá **＋ Publicar**. Se abre el modo escritorio (sin el feed) y se intenta abrir Crear. Si no se abre, usá **Crear (+)** en el menú de Instagram; después elegí archivo, editá, escribí el texto y tocá **Compartir** en Instagram. Para volver, tocá **×**.
 
 **Importante sobre publicación:** la interfaz web de escritorio permite publicaciones tradicionales en cuentas compatibles, pero **no se verificó el flujo real en este teléfono**. Instagram puede variar el editor según la cuenta, la región y el navegador, o rechazar una WebView. Si Crear no aparece, probá `⋯ → Reintentar abrir Crear`; si tampoco aparece, `⋯ → Abrir Instagram en Firefox` y activá **Sitio de escritorio** allí. Si la interfaz es muy angosta, girá el celular horizontalmente. La app evita interrupciones por cambios de orientación durante la edición.
@@ -128,6 +138,9 @@ python tests/profile-navigation.browser.py
 python tests/profile-stories.browser.py
 python tests/recommendations.browser.py
 python tests/navigation-bar.browser.py
+python tests/recommendation-cards.browser.py
+python tests/own-profile.browser.py
+python tests/theme.browser.py
 ```
 
 Las pruebas de navegador requieren Python con Playwright y Chromium instalado en `/usr/bin/chromium`. Utilizan fixtures locales, sin iniciar sesión en Instagram.
@@ -167,4 +180,4 @@ El botón **← Chats** del visor y Atrás de Android cargan nuevamente la conve
 
 ## Versión conservada
 
-El repositorio contiene el código y la APK de 0.3.6; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.
+El repositorio contiene el código y la APK de 0.3.7; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.

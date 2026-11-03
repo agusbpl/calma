@@ -25,12 +25,14 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.WebResourceError;
+import android.webkit.WebResourceResponse;
 import android.webkit.PermissionRequest;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ImageButton;
 import android.widget.ProgressBar;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -65,14 +67,21 @@ public final class MainActivity extends Activity {
     private static final int ACCENT = Color.rgb(136, 215, 183);
     private static final int TEXT = Color.rgb(244, 245, 247);
 
+    private LinearLayout rootLayout;
+    private boolean darkMode;
+    private String themeScript;
     private String viewerControlsScript;
     private String recommendationsScript;
+    private long loadGeneration = 0;
+    private boolean loadFailed = false;
+    private Runnable loadTimeout;
     private FrameLayout contentFrame;
     private View cover;
     private WebView webView;
     private LinearLayout navigationBar;
     private ImageButton publishButton;
     private String selectedUsername = "";
+    private String signedInUsername = "";
     private String currentPageKind = "";
     private String standardUserAgent;
     private String desktopUserAgent;
@@ -103,9 +112,8 @@ public final class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(BG);
-        getWindow().setNavigationBarColor(BG);
-        getWindow().getDecorView().setSystemUiVisibility(0);
+        darkMode = getPreferences(MODE_PRIVATE).getBoolean("dark_mode", true);
+        themeScript = readAsset("theme.js");
         viewerControlsScript = readAsset("viewer-controls.js");
         recommendationsScript = readAsset("recommendations.js");
         filterScript = readAsset("filter.js");
@@ -114,7 +122,8 @@ public final class MainActivity extends Activity {
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         buildInterface();
         createWebView();
-        webView.loadUrl(INBOX);
+        applyNativeTheme();
+        loadPage(INBOX);
     }
 
     private String readAsset(String name) {
@@ -138,7 +147,8 @@ public final class MainActivity extends Activity {
     }
     private void buildInterface() {
         LinearLayout root = column();
-        root.setBackgroundColor(BG);
+        rootLayout = root;
+        root.setBackgroundColor(backgroundColor());
         root.setFitsSystemWindows(false);
         root.setOnApplyWindowInsetsListener((view, insets) -> {
             int top;
@@ -155,7 +165,7 @@ public final class MainActivity extends Activity {
         });
 
         contentFrame = new FrameLayout(this);
-        contentFrame.setBackgroundColor(Color.WHITE);
+        contentFrame.setBackgroundColor(backgroundColor());
         root.addView(contentFrame, new LinearLayout.LayoutParams(-1, 0, 1));
 
         navigationBar = new LinearLayout(this);
@@ -181,9 +191,7 @@ public final class MainActivity extends Activity {
         button.setContentDescription(label);
         button.setTooltipText(label);
         button.setTag(kind);
-        button.setImageTintList(new ColorStateList(
-            new int[][]{new int[]{android.R.attr.state_selected}, new int[]{}},
-            new int[]{ACCENT, TEXT}));
+        button.setImageTintList(navigationTint());
         button.setBackground(new RippleDrawable(ColorStateList.valueOf(0x3388d7b7), null, null));
         button.setPadding(dp(14), dp(14), dp(14), dp(14));
         button.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
@@ -203,7 +211,7 @@ public final class MainActivity extends Activity {
     @SuppressLint("SetJavaScriptEnabled")
     private void createWebView() {
         webView = new WebView(this);
-        webView.setBackgroundColor(Color.WHITE);
+        webView.setBackgroundColor(backgroundColor());
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true); // Instagram requiere JavaScript.
         settings.setDomStorageEnabled(true);
@@ -270,28 +278,32 @@ public final class MainActivity extends Activity {
                 return intercept(Uri.parse(url));
             }
             @Override public void onPageStarted(WebView view, String url, android.graphics.Bitmap favicon) {
-                mainPageUrl = url;
-                if (isInbox(url)) lastChatUrl = url;
-                showCover();
-                updateCurrentLabel(url);
+                beginLoad(url);
             }
             @Override public void doUpdateVisitedHistory(WebView view, String url, boolean reload) {
                 mainPageUrl = url; // Incluye navegación SPA de Instagram.
+                clearOwnProfileOnLogin(url);
             }
-            @Override public void onPageCommitVisible(WebView view, String url) { injectFilter(false); }
+            @Override public void onPageCommitVisible(WebView view, String url) {
+                if (isCurrentLoad(url)) injectFilter(true);
+            }
             @Override public void onPageFinished(WebView view, String url) {
-                mainPageUrl = url;
+                if (!isCurrentLoad(url)) return;
                 if (isInbox(url)) lastChatUrl = url;
                 injectFilter(true);
                 refreshContext();
             }
             @Override public void onReceivedError(WebView view, WebResourceRequest request,
                                                   WebResourceError error) {
-                if (request.isForMainFrame()) hideCover();
+                if (request.isForMainFrame() && isCurrentLoad(request.getUrl().toString())) showLoadError();
+            }
+            @Override public void onReceivedHttpError(WebView view, WebResourceRequest request,
+                                                       WebResourceResponse response) {
+                if (request.isForMainFrame() && response.getStatusCode() >= 400 &&
+                    isCurrentLoad(request.getUrl().toString())) showLoadError();
             }
         });
         contentFrame.addView(webView, new FrameLayout.LayoutParams(-1, -1));
-        showCover();
     }
 
     private boolean intercept(Uri uri) {
@@ -449,30 +461,90 @@ public final class MainActivity extends Activity {
             android.os.SystemClock.elapsedRealtime() <= clipArmExpiry + 120000)
             ? allowedClipPath : "";
         String story = mayOpenProfileStory(current) ? allowedProfileStoryPath : "";
-        String allScripts = viewerControlsScript + "\n" + recommendationsScript + "\nwindow.__calmaApprovedProfileStoryPath=" + JSONObject.quote(story) +
+        final long generation = loadGeneration;
+        String allScripts = "window.__calmaDarkMode=" + darkMode + ";\n" + themeScript + "\n" +
+            viewerControlsScript + "\n" + recommendationsScript + "\n" +
+            "window.__calmaApprovedProfileStoryPath=" + JSONObject.quote(story) +
             ";\nwindow.__calmaReturnProfileUrl=" + JSONObject.quote(returnProfileUrl) + ";\n" +
             profileStoriesScript + "\nwindow.__calmaApprovedSingleClipPath=" +
             JSONObject.quote(allowed) + ";\nwindow.__calmaReturnChatUrl=" +
             JSONObject.quote(lastChatUrl) + ";\n" + filterScript + "\n" + clipScript;
         webView.evaluateJavascript(allScripts, result -> {
+            if (generation != loadGeneration || loadFailed) return;
             if (clearCover) hideCover();
             if (publishingMode && createPending) attemptOpenComposer();
             refreshContext();
         });
     }
+    private void beginLoad(String url) {
+        mainPageUrl = url;
+        clearOwnProfileOnLogin(url);
+        loadGeneration++;
+        loadFailed = false;
+        if (isInbox(url)) lastChatUrl = url;
+        showCover();
+        updateCurrentLabel(url);
+    }
+    private void loadPage(String url) {
+        if (webView == null || url == null) return;
+        beginLoad(url);
+        webView.loadUrl(url);
+    }
+    private void reloadPage() {
+        if (webView == null) return;
+        String url = webView.getUrl();
+        beginLoad(url == null ? INBOX : url);
+        webView.reload();
+    }
     private void showCover() {
         if (cover != null) contentFrame.removeView(cover);
         LinearLayout loading = column();
         loading.setGravity(Gravity.CENTER);
-        loading.setBackgroundColor(BG);
+        loading.setBackgroundColor(backgroundColor());
         ProgressBar spinner = new ProgressBar(this);
-        spinner.setIndeterminateTintList(ColorStateList.valueOf(ACCENT));
+        spinner.setIndeterminateTintList(ColorStateList.valueOf(accentColor()));
         spinner.setContentDescription("Cargando");
         loading.addView(spinner, new LinearLayout.LayoutParams(dp(28), dp(28)));
         contentFrame.addView(loading, new FrameLayout.LayoutParams(-1, -1));
         cover = loading;
+        if (loadTimeout != null) handler.removeCallbacks(loadTimeout);
+        final long generation = loadGeneration;
+        loadTimeout = () -> {
+            if (webView != null && cover == loading && generation == loadGeneration && !loadFailed) {
+                webView.stopLoading();
+                showLoadError();
+            }
+        };
+        handler.postDelayed(loadTimeout, 25000);
+    }
+    private boolean isCurrentLoad(String url) {
+        return !loadFailed && url != null && url.equals(mainPageUrl);
+    }
+    private void showLoadError() {
+        loadFailed = true;
+        hideCover();
+        final String retryUrl = mainPageUrl;
+        LinearLayout error = column();
+        error.setGravity(Gravity.CENTER);
+        error.setBackgroundColor(backgroundColor());
+        TextView message = new TextView(this);
+        message.setText("No se pudo cargar Instagram");
+        message.setTextColor(foregroundColor());
+        message.setGravity(Gravity.CENTER);
+        error.addView(message, new LinearLayout.LayoutParams(-1, dp(48)));
+        ImageButton retry = new ImageButton(this);
+        retry.setImageResource(android.R.drawable.ic_popup_sync);
+        retry.setImageTintList(ColorStateList.valueOf(accentColor()));
+        retry.setBackgroundColor(Color.TRANSPARENT);
+        retry.setContentDescription("Reintentar");
+        retry.setTooltipText("Reintentar");
+        retry.setOnClickListener(v -> { if (webView != null) loadPage(retryUrl); });
+        error.addView(retry, new LinearLayout.LayoutParams(dp(52), dp(52)));
+        contentFrame.addView(error, new FrameLayout.LayoutParams(-1, -1));
+        cover = error;
     }
     private void hideCover() {
+        if (loadTimeout != null) { handler.removeCallbacks(loadTimeout); loadTimeout = null; }
         if (cover != null) {
             contentFrame.removeView(cover);
             cover = null;
@@ -490,7 +562,7 @@ public final class MainActivity extends Activity {
         if (url.equals(INBOX) || (Uri.parse(url).getHost() != null &&
             Uri.parse(url).getHost().equals("www.instagram.com") &&
             !blockedRoute(Uri.parse(url).getPath()))) {
-            webView.loadUrl(url);
+            loadPage(url);
         }
     }
 
@@ -519,7 +591,7 @@ public final class MainActivity extends Activity {
         webView.getSettings().setLoadWithOverviewMode(true);
         webView.getSettings().setUseWideViewPort(true);
         // Abrir un área sin feed; el menú de escritorio contiene 'Crear'.
-        webView.loadUrl(INBOX);
+        loadPage(INBOX);
     }
 
     private void attemptOpenComposer() {
@@ -540,7 +612,7 @@ public final class MainActivity extends Activity {
     }
 
     private void confirmLeavePublishing(String destination) {
-        new AlertDialog.Builder(this).setTitle("Salir del editor")
+        dialog().setTitle("Salir del editor")
             .setMessage("Si todavía estás editando una publicación, Instagram podría " +
                         "descartar el borrador. ¿Querés salir?")
             .setNegativeButton("Seguir editando", null)
@@ -562,7 +634,7 @@ public final class MainActivity extends Activity {
         webView.getSettings().setUserAgentString(standardUserAgent);
         webView.getSettings().setLoadWithOverviewMode(true);
         if (destination == null || blockedRoute(Uri.parse(destination).getPath())) destination = INBOX;
-        webView.loadUrl(destination);
+        loadPage(destination);
     }
 
     private void updateCurrentLabel(String url) {
@@ -595,6 +667,7 @@ public final class MainActivity extends Activity {
     private void refreshContext() {
         if (webView == null) return;
         final String url = webView.getUrl();
+        clearOwnProfileOnLogin(url);
         if (url == null || !url.startsWith("https://www.instagram.com/")) return;
         if (isInbox(url)) lastChatUrl = url; // También cambios SPA entre chats.
         if (publishingMode) {
@@ -612,6 +685,8 @@ public final class MainActivity extends Activity {
                 String path = context.optString("path", "");
                 String actual = Uri.parse(webView.getUrl() == null ? "" : webView.getUrl()).getPath();
                 if (actual == null || !actual.equals(path)) return; // Respuesta vieja por SPA.
+                String own = context.optString("own", "");
+                if (!path.matches("^/accounts/login(/.*)?$") && validOwnUsername(own)) signedInUsername = own;
                 String type = context.optString("type", "");
                 String profile = context.optString("profile", "");
                 String author = context.optString("author", "");
@@ -629,16 +704,40 @@ public final class MainActivity extends Activity {
         });
     }
 
-    private void openSelectedProfile() {
-        if (publishingMode) {
-            Toast.makeText(this, "Terminá la publicación antes de cambiar de perfil", Toast.LENGTH_SHORT).show();
+    private boolean validOwnUsername(String user) {
+        return user != null && user.matches("[A-Za-z0-9._]{1,30}") &&
+            !usernameFromPath("/" + user + "/").isEmpty();
+    }
+    private void clearOwnProfileOnLogin(String url) {
+        String path = Uri.parse(url == null ? "" : url).getPath();
+        if (path != null && path.matches("^/accounts/login(/.*)?$")) signedInUsername = "";
+    }
+    private void openOwnProfile() {
+        if (webView == null) return;
+        final String source = webView.getUrl();
+        clearOwnProfileOnLogin(source);
+        if (source == null || !source.startsWith("https://www.instagram.com/")) return;
+        String sourcePath = Uri.parse(source).getPath();
+        if (sourcePath != null && sourcePath.matches("^/accounts/login(/.*)?$")) {
+            Toast.makeText(this, "Iniciá sesión para abrir tu perfil", Toast.LENGTH_SHORT).show();
             return;
         }
-        if (selectedUsername == null || selectedUsername.isEmpty()) {
-            Toast.makeText(this, "Abrí un perfil o una publicación para identificar su autor", Toast.LENGTH_LONG).show();
-            return;
-        }
-        go("https://www.instagram.com/" + selectedUsername + "/");
+        webView.evaluateJavascript("window.__calmaOwnProfile ? window.__calmaOwnProfile() : ''", result -> {
+            if (webView == null || !source.equals(webView.getUrl())) return;
+            String user = "";
+            try {
+                Object value = new JSONTokener(result).nextValue();
+                if (value instanceof String) user = (String) value;
+            } catch (Exception ignored) { /* Usar sólo identidad propia verificada antes. */ }
+            if (validOwnUsername(user)) signedInUsername = user;
+            else user = signedInUsername;
+            if (!validOwnUsername(user)) {
+                Toast.makeText(this, "Instagram todavía no muestra el acceso a tu perfil", Toast.LENGTH_LONG).show();
+                return;
+            }
+            String destination = "https://www.instagram.com/" + user + "/";
+            if (publishingMode) confirmLeavePublishing(destination); else go(destination);
+        });
     }
 
     private void openInstagramSearch() {
@@ -663,7 +762,7 @@ public final class MainActivity extends Activity {
         if (publishingMode) {
             String[] options = {"Reintentar abrir Crear (+)", "Volver a Mensajes",
                                 "Abrir Instagram en Firefox"};
-            new AlertDialog.Builder(this).setTitle("Calma · modo publicación")
+            dialog().setTitle("Calma · modo publicación")
                 .setItems(options, (dialog, choice) -> {
                     switch (choice) {
                         case 0:
@@ -678,37 +777,63 @@ public final class MainActivity extends Activity {
             return;
         }
         String[] options = {
-            "Ver perfil actual", "Recargar", "Abrir en navegador",
-            "Acerca de Calma", "Cerrar sesión"
+            "Mi perfil", "Recargar", "Abrir en navegador",
+            darkMode ? "Modo claro" : "Modo oscuro", "Cerrar sesión"
         };
-        new AlertDialog.Builder(this).setTitle("Calma · opciones")
+        dialog().setTitle("Calma · opciones")
             .setItems(options, (dialog, choice) -> {
                 switch (choice) {
-                    case 0: openSelectedProfile(); break;
-                    case 1: webView.reload(); break;
+                    case 0: openOwnProfile(); break;
+                    case 1: reloadPage(); break;
                     case 2: openFirefox(); break;
-                    case 3: showAbout(); break;
+                    case 3: toggleDarkMode(); break;
                     case 4: confirmLogout(); break;
                 }
             }).setNegativeButton("Cerrar", null).show();
     }
-    private void showAbout() {
-        new AlertDialog.Builder(this)
-            .setTitle("Usá Instagram, no el algoritmo")
-            .setMessage("✓ Mensajes directos\n✓ Buscador de Instagram\n✓ Perfiles visitados y autores de publicaciones\n" +
-                "✓ Crear publicaciones mediante la web de Instagram\n" +
-                "✓ Un solo video compartido por chat, con sonido\n" +
-                "✓ Inicio de sesión directamente en Instagram\n\n" +
-                "✕ Catálogo de Reels\n✕ Explorar\n✕ Historias encadenadas\n" +
-                "✕ Inicio infinito\n✕ Recomendaciones visibles\n" +
-                "✕ Enlaces que intenten instalar Instagram\n\n" +
-                "Calma no posee servidores ni accede a tus contraseñas. " +
-                "Los filtros visuales son de mejor esfuerzo y pueden dejar de funcionar " +
-                "si Instagram cambia su web. No ofrece notificaciones en segundo plano.")
-            .setPositiveButton("Entendido", null).show();
+    private int backgroundColor() { return darkMode ? BG : Color.rgb(250, 250, 250); }
+    private int foregroundColor() { return darkMode ? TEXT : Color.rgb(28, 30, 33); }
+    private int accentColor() { return darkMode ? ACCENT : Color.rgb(36, 113, 83); }
+    private ColorStateList navigationTint() {
+        return new ColorStateList(new int[][]{new int[]{android.R.attr.state_selected}, new int[]{}},
+            new int[]{accentColor(), foregroundColor()});
+    }
+    private AlertDialog.Builder dialog() {
+        return new AlertDialog.Builder(this, darkMode ? android.R.style.Theme_Material_Dialog_Alert :
+            android.R.style.Theme_Material_Light_Dialog_Alert);
+    }
+    private void toggleDarkMode() {
+        darkMode = !darkMode;
+        getPreferences(MODE_PRIVATE).edit().putBoolean("dark_mode", darkMode).apply();
+        applyNativeTheme();
+        if (webView != null) webView.evaluateJavascript(
+            "window.__calmaDarkMode=" + darkMode + ";window.__calmaApplyTheme?.(" + darkMode + ");", null);
+    }
+    private void applyNativeTheme() {
+        int background = backgroundColor();
+        getWindow().setStatusBarColor(background);
+        getWindow().setNavigationBarColor(background);
+        getWindow().getDecorView().setSystemUiVisibility(darkMode ? 0 :
+            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR | View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        rootLayout.setBackgroundColor(background);
+        contentFrame.setBackgroundColor(background);
+        if (webView != null) webView.setBackgroundColor(background);
+        for (int i = 0; i < navigationBar.getChildCount(); i++)
+            ((ImageButton) navigationBar.getChildAt(i)).setImageTintList(navigationTint());
+        if (cover != null) {
+            cover.setBackgroundColor(background);
+            if (cover instanceof LinearLayout) for (int i = 0; i < ((LinearLayout) cover).getChildCount(); i++) {
+                View child = ((LinearLayout) cover).getChildAt(i);
+                if (child instanceof TextView) ((TextView) child).setTextColor(foregroundColor());
+                if (child instanceof ProgressBar) ((ProgressBar) child).setIndeterminateTintList(ColorStateList.valueOf(accentColor()));
+                if (child instanceof ImageButton) ((ImageButton) child).setImageTintList(ColorStateList.valueOf(accentColor()));
+            }
+        }
     }
     private void openFirefox() {
-        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(INBOX));
+        String destination = webView == null ? INBOX : webView.getUrl();
+        if (destination == null || !destination.startsWith("https://www.instagram.com/")) destination = INBOX;
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(destination));
         i.addCategory(Intent.CATEGORY_BROWSABLE);
         try {
             i.setPackage("org.mozilla.firefox");
@@ -722,17 +847,18 @@ public final class MainActivity extends Activity {
         }
     }
     private void confirmLogout() {
-        new AlertDialog.Builder(this).setTitle("Cerrar sesión en Calma")
+        dialog().setTitle("Cerrar sesión en Calma")
             .setMessage("Se borrarán las cookies y el almacenamiento web local de este cliente. " +
                 "No afecta tu cuenta de Instagram ni las sesiones de otros navegadores.")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Borrar sesión", (dialog, which) -> {
+                signedInUsername = "";
                 CookieManager.getInstance().removeAllCookies(ok -> {
                     CookieManager.getInstance().flush();
                     webView.clearCache(true);
                     webView.clearHistory();
                     android.webkit.WebStorage.getInstance().deleteAllData();
-                    webView.loadUrl(INBOX);
+                    loadPage(INBOX);
                 });
             }).show();
     }
@@ -757,7 +883,7 @@ public final class MainActivity extends Activity {
     @Override public void onBackPressed() {
         if (webView != null && mayOpenProfileStory(Uri.parse(webView.getUrl() == null ? "" : webView.getUrl()).getPath())) {
             allowedProfileStoryPath = "";
-            webView.loadUrl(returnProfileUrl);
+            loadPage(returnProfileUrl);
             return;
         }
         if (clipActive && webView != null) {
@@ -768,7 +894,7 @@ public final class MainActivity extends Activity {
             clearSharedClip();
             webView.goBack();
         }
-        else new AlertDialog.Builder(this).setTitle("Cerrar Calma")
+        else dialog().setTitle("Cerrar Calma")
              .setMessage("¿Salir del cliente?")
              .setNegativeButton("Seguir", null)
              .setPositiveButton("Salir", (d, w) -> finish()).show();
@@ -786,6 +912,7 @@ public final class MainActivity extends Activity {
     }
     @Override protected void onDestroy() {
         handler.removeCallbacks(pollContext);
+        if (loadTimeout != null) handler.removeCallbacks(loadTimeout);
         clearSharedClip();
         if (fileCallback != null) { fileCallback.onReceiveValue(null); fileCallback = null; }
         if (webView != null) {
