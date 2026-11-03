@@ -3,6 +3,7 @@
 ## 0.3.7 — Tema oscuro y controles esenciales
 
 - Historias y clips comparten controles SVG inferiores accesibles: volver, reproducción, sonido y repetir al terminar, sin carteles repetidos. Se conserva el bloqueo de avance.
+- Se ocultan tarjetas de cuentas sugeridas sólo dentro de colecciones identificadas; nunca se ocultan secciones completas. Selectores contrastados con notificaciones reales.
 
 ## 0.3.6 — Una sola barra inferior de iconos
 

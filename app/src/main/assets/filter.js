@@ -119,6 +119,7 @@
     if (redirectIfBlocked()) return;
     document.body?.classList.toggle('calma-profile', !!profileFromPath(location.pathname));
     hideAppNags();
+    window.__calmaHideRecommendationCards?.();
     hideRecommendations();
     hideDuplicateNavigation();
     if (!style.isConnected) (document.head || document.documentElement).appendChild(style);
