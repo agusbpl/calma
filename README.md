@@ -1,6 +1,12 @@
-# calma. 0.3.2 — Instagram sin el ruido
+# calma. 0.3.3 — Instagram sin el ruido
 
-Cliente personal Android que utiliza **el sitio web de Instagram dentro de una WebView**. Sin servidor ni API privada. Prioriza mensajes, perfiles y la publicación intencional; bloquea el acceso al feed, Explorar, historias y Reels. La sesión se guarda localmente en Android.
+Cliente personal Android que utiliza **el sitio web de Instagram dentro de una WebView**. Sin servidor ni API privada. Prioriza mensajes, perfiles y la publicación intencional; permite updates e historias elegidas desde un perfil y bloquea el acceso al feed, Explorar y Reels. La sesión se guarda localmente en Android.
+
+## Novedad 0.3.3: updates e historias desde perfiles
+
+Tocá **♡** (updates) para ver la actividad. Desde un perfil podés abrir su historia o una destacada: Calma muestra una sola foto o video, sin swipe ni reproducción encadenada. Para elegir otra, usá **← Perfil** y volvé a seleccionarla desde allí. Si Instagram no expone el contenido compatible, el visor vuelve al perfil.
+
+Tocar un enlace bloqueado conserva la pantalla actual en lugar de expulsarte a Chats. Estas funciones se verifican con fixtures locales; falta validarlas con una sesión real de Instagram.
 
 ## Novedad 0.3: un solo video cuando te comparten Reels e historias
 
@@ -30,9 +36,9 @@ elimina DRM ni restricciones del sitio.
 
 ## Instalar la última versión
 
-La única entrega conservada es **0.3.2** (versionCode 5): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
+La entrega actual es **0.3.3** (versionCode 6): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
 
-Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de pruebas](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de la entrega original. No se incluyen APK anteriores ni claves de firma.
+Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
 
 ## Cambios conservados de la versión 0.2
 
@@ -61,8 +67,8 @@ No proporciona publicación nativa directa, historias, música, filtros de Reels
 | Permitido | Filtrado/bloqueado |
 | --- | --- |
 | Mensajes directos y adjuntos | Inicio/feed infinito (`/`) |
-| Ver perfiles propios y ajenos | Reels y Explorar |
-| Entrar en fotos/publicaciones elegidas y clips compartidos en Direct | Catálogos de Reels, historias encadenadas y actividad compulsiva |
+| Ver perfiles propios y ajenos, updates e historias individuales desde un perfil | Reels y Explorar |
+| Entrar en fotos/publicaciones elegidas y clips compartidos en Direct | Catálogos de Reels e historias encadenadas |
 | Ver autor de una publicación (si el DOM lo expone) | Recomendaciones visibles identificables |
 | Subir fotos o videos usando Crear de Instagram web | Enlaces profundos que fuerzan instalar la app |
 | Inicio de sesión en Instagram | Reproducción encadenada de clips sugeridos |
@@ -105,6 +111,8 @@ node --test tests/filter.test.cjs
 python tests/clip.browser.py
 python tests/search.browser.py
 python tests/clip-return.browser.py
+python tests/profile-navigation.browser.py
+python tests/profile-stories.browser.py
 ```
 
 Las pruebas de navegador requieren Python con Playwright y Chromium instalado en `/usr/bin/chromium`. Utilizan fixtures locales, sin iniciar sesión en Instagram.
@@ -144,4 +152,4 @@ El botón **← Chats** del visor y Atrás de Android cargan nuevamente la conve
 
 ## Versión conservada
 
-El repositorio contiene únicamente el código y la APK de 0.3.2. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.
+El repositorio contiene el código y la APK de 0.3.3; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.

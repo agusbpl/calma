@@ -1,5 +1,12 @@
 # Registro de cambios
 
+## 0.3.3 — Updates e historias elegidas desde perfiles
+
+- Acceso a actividad con ♡ Updates.
+- Historias y destacadas desde el perfil, limitadas a una foto o video sin avance automático ni gestos para encadenar contenido.
+- Los enlaces bloqueados conservan el perfil en lugar de redirigir a Chats.
+- Pruebas locales de navegación y visor; compatibilidad autenticada pendiente.
+
 ## 0.3.2 — Regreso al chat desde un video
 
 - Al cerrar el visor se recarga siempre el chat de origen, incluso cuando Instagram mantiene la URL de Direct al abrir su carrusel.

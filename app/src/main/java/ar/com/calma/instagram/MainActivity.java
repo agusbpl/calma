@@ -88,6 +88,10 @@ public final class MainActivity extends Activity {
     };
     private String filterScript;
     private String clipScript;
+    private String profileStoriesScript;
+    private volatile String allowedProfileStoryPath = "";
+    private volatile String returnProfileUrl = "";
+    private volatile long profileStoryExpiry = 0;
     private volatile String mainPageUrl = INBOX;
     private volatile String lastChatUrl = INBOX;
     private volatile String allowedClipPath = "";
@@ -104,6 +108,7 @@ public final class MainActivity extends Activity {
         getWindow().getDecorView().setSystemUiVisibility(0);
         filterScript = readAsset("filter.js");
         clipScript = readAsset("clip.js");
+        profileStoriesScript = readAsset("profile-stories.js");
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
         buildInterface();
         createWebView();
@@ -204,6 +209,12 @@ public final class MainActivity extends Activity {
             }), new LinearLayout.LayoutParams(0, dp(49), 1.0f));
         toolbar.addView(makeButton("⌕ Buscar", this::openInstagramSearch),
                 new LinearLayout.LayoutParams(0, dp(49), .9f));
+        TextView updatesButton = makeButton("♡", () -> {
+            String activity = "https://www.instagram.com/accounts/activity/";
+            if (publishingMode) confirmLeavePublishing(activity); else go(activity);
+        });
+        updatesButton.setContentDescription("Actualizaciones de Instagram");
+        toolbar.addView(updatesButton, new LinearLayout.LayoutParams(0, dp(49), .5f));
         publishButton = makeButton("＋ Publicar", this::onPublishButton);
         publishButton.setTextColor(ACCENT);
         toolbar.addView(publishButton, new LinearLayout.LayoutParams(0, dp(49), 1.1f));
@@ -303,6 +314,9 @@ public final class MainActivity extends Activity {
                 showCover();
                 updateCurrentLabel(url);
             }
+            @Override public void doUpdateVisitedHistory(WebView view, String url, boolean reload) {
+                mainPageUrl = url; // Incluye navegación SPA de Instagram.
+            }
             @Override public void onPageCommitVisible(WebView view, String url) { injectFilter(false); }
             @Override public void onPageFinished(WebView view, String url) {
                 mainPageUrl = url;
@@ -333,9 +347,8 @@ public final class MainActivity extends Activity {
         host = host.toLowerCase(Locale.ROOT);
         if (host.equals("instagram.com") || host.endsWith(".instagram.com")) {
             String path = uri.getPath();
-            if (blockedRoute(path) && !mayOpenSharedClip(path)) {
+            if (blockedRoute(path) && !mayOpenSharedClip(path) && !mayOpenProfileStory(path)) {
                 blockedNotice();
-                if (webView != null && !isInbox(webView.getUrl())) webView.loadUrl(INBOX);
                 return true;
             }
             return false;
@@ -368,6 +381,22 @@ public final class MainActivity extends Activity {
         return false;
     }
 
+    private boolean mayOpenProfileStory(String path) {
+        if (path == null || allowedProfileStoryPath.isEmpty() ||
+            android.os.SystemClock.elapsedRealtime() > profileStoryExpiry) return false;
+        String normalized = path.replaceAll("/$", "");
+        if (normalized.equals(allowedProfileStoryPath)) return true;
+        // A profile avatar may omit the first item ID. Pin that first item,
+        // then reject all following items, including another user's stories.
+        if ((allowedProfileStoryPath.matches("(?i)^/stories/[a-z0-9._]+$") ||
+             allowedProfileStoryPath.matches("(?i)^/stories/highlights/[0-9]+$")) &&
+            normalized.matches(java.util.regex.Pattern.quote(allowedProfileStoryPath) + "/[0-9]+")) {
+            allowedProfileStoryPath = normalized;
+            return true;
+        }
+        return false;
+    }
+
     private void clearSharedClip() {
         clipActive = false;
         allowNextSharedClip = false;
@@ -379,6 +408,25 @@ public final class MainActivity extends Activity {
     /** JavaScript interfaces are visible to iframes: do not provide privileged
      * reads, arbitrary navigation, permissions or access to account data. */
     private final class ClipBridge {
+        @JavascriptInterface public void armProfileStory(String rawUrl, String profileUrl) {
+            if (rawUrl == null || profileUrl == null || rawUrl.length() > 300 || profileUrl.length() > 200) return;
+            Uri source = Uri.parse(profileUrl);
+            Uri target = Uri.parse(rawUrl);
+            String user = usernameFromPath(source.getPath());
+            if (user.isEmpty() || !"https".equals(source.getScheme()) ||
+                !"www.instagram.com".equalsIgnoreCase(source.getHost()) ||
+                !"https".equals(target.getScheme()) ||
+                !("www.instagram.com".equalsIgnoreCase(target.getHost()) ||
+                  "instagram.com".equalsIgnoreCase(target.getHost()))) return;
+            Uri current = Uri.parse(mainPageUrl == null ? "" : mainPageUrl);
+            if (!user.equalsIgnoreCase(usernameFromPath(current.getPath()))) return;
+            String path = target.getPath();
+            if (path == null || !(path.matches("(?i)^/stories/" + java.util.regex.Pattern.quote(user) + "(/[0-9]+)?/?$") ||
+                path.matches("(?i)^/stories/highlights/[0-9]+/?$"))) return;
+            allowedProfileStoryPath = path.replaceAll("/$", "");
+            returnProfileUrl = "https://www.instagram.com/" + user + "/";
+            profileStoryExpiry = android.os.SystemClock.elapsedRealtime() + 120000;
+        }
         @JavascriptInterface public void armClip(String rawUrl) {
             if (rawUrl == null || rawUrl.length() > 300) return;
             // The source must be a Direct chat; no background reels activation.
@@ -415,8 +463,7 @@ public final class MainActivity extends Activity {
         if (path.equals("/")) return true;
         String p = path.toLowerCase(Locale.ROOT);
         if (p.equals("/explore/search") || p.equals("/explore/search/")) return false;
-        return p.matches("^/(reels?|explore|stories|tv|clips)(/.*)?$") ||
-               p.matches("^/accounts/activity(/.*)?$");
+        return p.matches("^/(reels?|explore|stories|tv|clips)(/.*)?$");
     }
     private void blockedNotice() {
         long now = android.os.SystemClock.elapsedRealtime();
@@ -440,7 +487,10 @@ public final class MainActivity extends Activity {
         String allowed = (current != null && current.replaceAll("/$", "").equals(allowedClipPath) &&
             android.os.SystemClock.elapsedRealtime() <= clipArmExpiry + 120000)
             ? allowedClipPath : "";
-        String allScripts = "window.__calmaApprovedSingleClipPath=" +
+        String story = mayOpenProfileStory(current) ? allowedProfileStoryPath : "";
+        String allScripts = "window.__calmaApprovedProfileStoryPath=" + JSONObject.quote(story) +
+            ";\nwindow.__calmaReturnProfileUrl=" + JSONObject.quote(returnProfileUrl) + ";\n" +
+            profileStoriesScript + "\nwindow.__calmaApprovedSingleClipPath=" +
             JSONObject.quote(allowed) + ";\nwindow.__calmaReturnChatUrl=" +
             JSONObject.quote(lastChatUrl) + ";\n" + filterScript + "\n" + clipScript;
         webView.evaluateJavascript(allScripts, result -> {
@@ -582,6 +632,14 @@ public final class MainActivity extends Activity {
             currentPageKind = "messages";
             subtitle.setText("Mensajes, sin distracciones");
             currentSection.setText("  Mensajes privados · sin feed");
+        } else if (path.startsWith("/accounts/activity")) {
+            currentPageKind = "activity";
+            subtitle.setText("Actividad de tu cuenta");
+            currentSection.setText("  Actualizaciones · sin feed");
+        } else if (path.startsWith("/stories/") && mayOpenProfileStory(path)) {
+            currentPageKind = "story";
+            subtitle.setText("Historia elegida · una sola");
+            currentSection.setText("  Volvé al perfil para elegir otra");
         } else if (path.startsWith("/reel/") || path.startsWith("/stories/")) {
             currentPageKind = "post";
             subtitle.setText("Video compartido · uno solo");
@@ -793,6 +851,11 @@ public final class MainActivity extends Activity {
         }
     }
     @Override public void onBackPressed() {
+        if (webView != null && mayOpenProfileStory(Uri.parse(webView.getUrl() == null ? "" : webView.getUrl()).getPath())) {
+            allowedProfileStoryPath = "";
+            webView.loadUrl(returnProfileUrl);
+            return;
+        }
         if (clipActive && webView != null) {
             webView.evaluateJavascript("window.__calmaClipClose?.();", null);
             return;

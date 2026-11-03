@@ -10,7 +10,7 @@
   window.__calmaInstalled = true;
 
   const INBOX = 'https://www.instagram.com/direct/inbox/';
-  const FORBIDDEN = /^\/(?:reel(?:s)?|explore|stories|tv|clips|accounts\/activity)(?:\/|$)/i;
+  const FORBIDDEN = /^\/(?:reel(?:s)?|explore|stories|tv|clips)(?:\/|$)/i;
   const SINGLE_CLIP = /^\/(?:reel\/[a-z0-9_-]+|stories\/[a-z0-9._]+\/[0-9]+)(?:\/|$)/i;
   const normalizeClipPath = path => (path || '').replace(/\/+$/, '');
   const isSharedClipAllowed = path => SINGLE_CLIP.test(path) && (
@@ -18,7 +18,7 @@
     (Date.now() < (window.__calmaClipPendingUntil || 0))
   );
   const isSearch = path => /^\/explore\/search\/?$/i.test(path);
-  const isBlocked = path => (FORBIDDEN.test(path) && !isSearch(path) && !isSharedClipAllowed(path)) || path === '/';
+  const isBlocked = path => (FORBIDDEN.test(path) && !isSearch(path) && !isSharedClipAllowed(path) && !window.__calmaProfileStoryAllowed?.(path)) || path === '/';
   let lastPath = location.pathname;
   let lastUrl = location.href;
 
@@ -26,11 +26,10 @@
   style.id = 'calma-hide-noise';
   style.textContent = `
     body:not(.calma-chat) a[href^="/reel/"], a[href^="/reels/"],
-    a[href^="/explore/"]:not([href="/explore/search"]):not([href="/explore/search/"]):not([href^="/explore/search?"]):not([href^="/explore/search/?"]), body:not(.calma-chat) a[href^="/stories/"],
+    a[href^="/explore/"]:not([href="/explore/search"]):not([href="/explore/search/"]):not([href^="/explore/search?"]):not([href^="/explore/search/?"]), body:not(.calma-chat):not(.calma-profile):not(.calma-profile-story) a[href^="/stories/"],
     a[href^="/tv/"], a[href^="/clips/"],
-    a[href^="/accounts/activity/"],
     body:not(.calma-chat) a[href*="instagram.com/reel/"], a[href*="instagram.com/reels/"],
-    a[href*="instagram.com/explore/"]:not([href$="/explore/search"]):not([href$="/explore/search/"]):not([href*="/explore/search?"]):not([href*="/explore/search/?"]), body:not(.calma-chat) a[href*="instagram.com/stories/"]
+    a[href*="instagram.com/explore/"]:not([href$="/explore/search"]):not([href$="/explore/search/"]):not([href*="/explore/search?"]):not([href*="/explore/search/?"]), body:not(.calma-chat):not(.calma-profile):not(.calma-profile-story) a[href*="instagram.com/stories/"]
       { display: none !important; visibility: hidden !important; }
     body { overscroll-behavior-y: contain !important; }
   `;
@@ -102,9 +101,11 @@
   let scheduled = false;
   function refresh() {
     if (redirectIfBlocked()) return;
+    document.body?.classList.toggle('calma-profile', !!profileFromPath(location.pathname));
     hideAppNags();
     hideRecommendations();
     if (!style.isConnected) (document.head || document.documentElement).appendChild(style);
+    window.__calmaProfileStoryRefresh?.();
     window.__calmaClipRefresh?.();
   }
   function scheduleRefresh() {
@@ -121,9 +122,9 @@
       // Fuera del chat permanece prohibido.
       const sharedInChat = /^\/direct(?:\/|$)/i.test(location.pathname) &&
         SINGLE_CLIP.test(url.pathname);
-      if (isInstagramUrl(url.href) && isBlocked(url.pathname) && !sharedInChat) {
+      const profileStory = isInstagramUrl(url.href) && window.__calmaProfileStoryClick?.(ev, url);
+      if (isInstagramUrl(url.href) && isBlocked(url.pathname) && !sharedInChat && !profileStory) {
         ev.preventDefault(); ev.stopImmediatePropagation();
-        if (location.pathname !== '/direct/inbox/') location.assign(INBOX);
       }
       if (/^(intent:|instagram:|market:)$/.test(url.protocol)) {
         ev.preventDefault(); ev.stopImmediatePropagation();
