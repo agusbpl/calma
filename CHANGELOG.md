@@ -1,5 +1,13 @@
 # Registro de cambios
 
+## 0.3.6 — Una sola barra inferior de iconos
+
+- Cinco controles vectoriales sin etiquetas visibles: chats, buscar, updates, publicar y opciones; nombres accesibles conservados.
+- Sin cabecera, distintivo de modo ni textos de estado. Carga con indicador visual.
+- Recargar pasa al menú y se retiran accesos duplicados del menú.
+- Se oculta la barra global inferior de Instagram cuando se identifica, conservando controles de contenido.
+- Compilación e instalación verificadas en el teléfono con la sesión existente.
+
 ## 0.3.5 — Recomendaciones sin ocultar perfiles ni actividad
 
 - Diagnóstico con la sesión real en un teléfono físico: «Suggested for you» hacía que el filtro ocultara la sección completa de perfiles y notificaciones.

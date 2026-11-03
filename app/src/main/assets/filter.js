@@ -74,6 +74,26 @@
     }
   }
 
+  function hideDuplicateNavigation() {
+    // Sólo la barra global fija con Inicio y Direct; conservar encabezados,
+    // controles de chats y cualquier contenedor del contenido de la página.
+    for (const home of document.querySelectorAll('a[href="/"], a[href="https://www.instagram.com/"]')) {
+      let bar = home.parentElement;
+      for (let depth = 0; bar && depth < 16; depth++, bar = bar.parentElement) {
+        if (['BODY', 'HTML', 'MAIN', 'SECTION', 'ARTICLE'].includes(bar.tagName)) break;
+        if (bar.hasAttribute('data-calma-navigation')) break;
+        const rect = bar.getBoundingClientRect();
+        if (getComputedStyle(bar).position !== 'fixed' || rect.height > 120 ||
+            rect.width < innerWidth * .75 || rect.bottom < innerHeight - 8) continue;
+        if (!bar.querySelector('a[href^="/direct/"], a[href^="https://www.instagram.com/direct/"]') ||
+            bar.querySelector('input, textarea, main, article')) continue;
+        bar.setAttribute('data-calma-navigation', '');
+        bar.style.setProperty('display', 'none', 'important');
+        break;
+      }
+    }
+  }
+
   const recommendations = [
     /^suggested for you$/i, /^recommended for you$/i,
     /^suggested posts$/i, /^because you follow$/i,
@@ -100,6 +120,7 @@
     document.body?.classList.toggle('calma-profile', !!profileFromPath(location.pathname));
     hideAppNags();
     hideRecommendations();
+    hideDuplicateNavigation();
     if (!style.isConnected) (document.head || document.documentElement).appendChild(style);
     window.__calmaProfileStoryRefresh?.();
     window.__calmaClipRefresh?.();

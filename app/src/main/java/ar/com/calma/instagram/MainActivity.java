@@ -8,8 +8,8 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.graphics.Color;
-import android.graphics.Typeface;
-import android.graphics.drawable.GradientDrawable;
+import android.content.res.ColorStateList;
+import android.graphics.drawable.RippleDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,7 +28,8 @@ import android.webkit.WebResourceError;
 import android.webkit.PermissionRequest;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TextView;
+import android.widget.ImageButton;
+import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -61,17 +62,14 @@ public final class MainActivity extends Activity {
     private static final String OPEN_CREATE_JS = "(function(){try{return !!(window.__calmaOpenComposer " +
             "&& window.__calmaOpenComposer());}catch(e){return false;}})();";
     private static final int BG = Color.rgb(17, 19, 24);
-    private static final int SURFACE = Color.rgb(29, 32, 38);
     private static final int ACCENT = Color.rgb(136, 215, 183);
     private static final int TEXT = Color.rgb(244, 245, 247);
-    private static final int MUTED = Color.rgb(167, 176, 182);
 
     private FrameLayout contentFrame;
     private View cover;
     private WebView webView;
-    private TextView currentSection;
-    private TextView subtitle;
-    private TextView publishButton;
+    private LinearLayout navigationBar;
+    private ImageButton publishButton;
     private String selectedUsername = "";
     private String currentPageKind = "";
     private String standardUserAgent;
@@ -129,29 +127,11 @@ public final class MainActivity extends Activity {
 
     private int dp(float v) { return (int) (getResources().getDisplayMetrics().density * v + 0.5f); }
 
-    private GradientDrawable shape(int background, float radiusDp, int stroke) {
-        GradientDrawable d = new GradientDrawable();
-        d.setColor(background);
-        d.setCornerRadius(dp(radiusDp));
-        if (stroke != Color.TRANSPARENT) d.setStroke(dp(1), stroke);
-        return d;
-    }
-
     private LinearLayout column() {
         LinearLayout layout = new LinearLayout(this);
         layout.setOrientation(LinearLayout.VERTICAL);
         return layout;
     }
-    private TextView text(String value, float size, int color, boolean bold) {
-        TextView tv = new TextView(this);
-        tv.setText(value);
-        tv.setTextSize(size);
-        tv.setTextColor(color);
-        tv.setGravity(Gravity.CENTER_VERTICAL);
-        if (bold) tv.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
-        return tv;
-    }
-
     private void buildInterface() {
         LinearLayout root = column();
         root.setBackgroundColor(BG);
@@ -170,73 +150,50 @@ public final class MainActivity extends Activity {
             return insets;
         });
 
-        LinearLayout header = column();
-        header.setPadding(dp(19), dp(12), dp(19), dp(12));
-        TextView brand = text("calma.", 27, TEXT, true);
-        header.addView(brand, new LinearLayout.LayoutParams(-1, dp(36)));
-        LinearLayout contextRow = new LinearLayout(this);
-        contextRow.setGravity(Gravity.CENTER_VERTICAL);
-        subtitle = text("Instagram, sin el ruido", 12, MUTED, false);
-        subtitle.setSingleLine(true);
-        subtitle.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        contextRow.addView(subtitle, new LinearLayout.LayoutParams(0, dp(24), 1));
-        TextView mode = text("MODO ESENCIAL", 9, ACCENT, true);
-        mode.setGravity(Gravity.CENTER);
-        mode.setPadding(dp(10), dp(6), dp(10), dp(6));
-        mode.setBackground(shape(SURFACE, 18, Color.rgb(60, 91, 77)));
-        contextRow.addView(mode);
-        header.addView(contextRow);
-        root.addView(header);
-
         contentFrame = new FrameLayout(this);
         contentFrame.setBackgroundColor(Color.WHITE);
         root.addView(contentFrame, new LinearLayout.LayoutParams(-1, 0, 1));
 
-        LinearLayout bottom = column();
-        bottom.setBackgroundColor(BG);
-        bottom.setPadding(dp(12), dp(9), dp(12), dp(10));
-        currentSection = text("  Solo se muestran las secciones que elegís abrir.", 11, MUTED, false);
-        currentSection.setSingleLine(true);
-        currentSection.setEllipsize(android.text.TextUtils.TruncateAt.END);
-        currentSection.setContentDescription("Usuario mostrado. Tocá para abrir su perfil si está disponible");
-        currentSection.setOnClickListener(v -> openSelectedProfile());
-        bottom.addView(currentSection, new LinearLayout.LayoutParams(-1, dp(21)));
-
-        LinearLayout toolbar = new LinearLayout(this);
-        toolbar.setGravity(Gravity.CENTER);
-        toolbar.addView(makeButton("✉ Chats", () -> {
-                if (publishingMode) confirmLeavePublishing(INBOX); else go(INBOX);
-            }), new LinearLayout.LayoutParams(0, dp(49), 1.0f));
-        toolbar.addView(makeButton("⌕ Buscar", this::openInstagramSearch),
-                new LinearLayout.LayoutParams(0, dp(49), .9f));
-        TextView updatesButton = makeButton("♡", () -> {
+        navigationBar = new LinearLayout(this);
+        navigationBar.setGravity(Gravity.CENTER);
+        navigationBar.setPadding(dp(8), dp(4), dp(8), dp(4));
+        addAction(R.drawable.ic_chats, "Chats", "messages", () -> {
+            if (publishingMode) confirmLeavePublishing(INBOX); else go(INBOX);
+        });
+        addAction(R.drawable.ic_search, "Buscar", "search", this::openInstagramSearch);
+        addAction(R.drawable.ic_heart, "Actualizaciones", "activity", () -> {
             String activity = "https://www.instagram.com/notifications/";
             if (publishingMode) confirmLeavePublishing(activity); else go(activity);
         });
-        updatesButton.setContentDescription("Actualizaciones de Instagram");
-        toolbar.addView(updatesButton, new LinearLayout.LayoutParams(0, dp(49), .5f));
-        publishButton = makeButton("＋ Publicar", this::onPublishButton);
-        publishButton.setTextColor(ACCENT);
-        toolbar.addView(publishButton, new LinearLayout.LayoutParams(0, dp(49), 1.1f));
-        toolbar.addView(makeButton("↻", () -> webView.reload()),
-                new LinearLayout.LayoutParams(0, dp(49), .42f));
-        toolbar.addView(makeButton("⋯", this::showOptions),
-                new LinearLayout.LayoutParams(0, dp(49), .42f));
-        bottom.addView(toolbar);
-        root.addView(bottom);
+        publishButton = addAction(R.drawable.ic_add, "Publicar", "publish", this::onPublishButton);
+        addAction(R.drawable.ic_more, "Opciones", "options", this::showOptions);
+        root.addView(navigationBar);
         setContentView(root);
     }
 
-    private TextView makeButton(String label, Runnable action) {
-        TextView btn = text(label, 14, TEXT, true);
-        btn.setGravity(Gravity.CENTER);
-        btn.setBackground(shape(SURFACE, 12, BG));
-        btn.setOnClickListener(view -> action.run());
-        btn.setContentDescription(label);
-        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -1);
-        p.setMargins(dp(2), 0, dp(2), 0);
-        btn.setPadding(dp(2), dp(4), dp(2), dp(4));
-        return btn;
+    private ImageButton addAction(int icon, String label, String kind, Runnable action) {
+        ImageButton button = new ImageButton(this);
+        button.setImageResource(icon);
+        button.setContentDescription(label);
+        button.setTooltipText(label);
+        button.setTag(kind);
+        button.setImageTintList(new ColorStateList(
+            new int[][]{new int[]{android.R.attr.state_selected}, new int[]{}},
+            new int[]{ACCENT, TEXT}));
+        button.setBackground(new RippleDrawable(ColorStateList.valueOf(0x3388d7b7), null, null));
+        button.setPadding(dp(14), dp(14), dp(14), dp(14));
+        button.setScaleType(android.widget.ImageView.ScaleType.CENTER_INSIDE);
+        button.setOnClickListener(view -> action.run());
+        navigationBar.addView(button, new LinearLayout.LayoutParams(0, dp(52), 1));
+        return button;
+    }
+
+    private void updateNavigation() {
+        String active = publishingMode ? "publish" : currentPageKind;
+        for (int i = 0; i < navigationBar.getChildCount(); i++) {
+            View button = navigationBar.getChildAt(i);
+            button.setSelected(active.equals(button.getTag()));
+        }
     }
 
     @SuppressLint("SetJavaScriptEnabled")
@@ -504,12 +461,10 @@ public final class MainActivity extends Activity {
         LinearLayout loading = column();
         loading.setGravity(Gravity.CENTER);
         loading.setBackgroundColor(BG);
-        TextView logo = text("calma.", 36, ACCENT, true);
-        logo.setGravity(Gravity.CENTER);
-        loading.addView(logo, new LinearLayout.LayoutParams(-1, dp(60)));
-        TextView desc = text("Cargando lo esencial…", 13, MUTED, false);
-        desc.setGravity(Gravity.CENTER);
-        loading.addView(desc);
+        ProgressBar spinner = new ProgressBar(this);
+        spinner.setIndeterminateTintList(ColorStateList.valueOf(ACCENT));
+        spinner.setContentDescription("Cargando");
+        loading.addView(spinner, new LinearLayout.LayoutParams(dp(28), dp(28)));
         contentFrame.addView(loading, new FrameLayout.LayoutParams(-1, -1));
         cover = loading;
     }
@@ -550,10 +505,10 @@ public final class MainActivity extends Activity {
         createAttempts = 0;
         selectedUsername = "";
         currentPageKind = "publish";
-        publishButton.setText("✓ Salir");
+        publishButton.setImageResource(R.drawable.ic_close);
+        updateNavigation();
         publishButton.setContentDescription("Salir del modo de publicación");
-        subtitle.setText("Modo publicación · Instagram web");
-        currentSection.setText("  Tocá Crear (+) si no se abre el editor automáticamente");
+        publishButton.setTooltipText("Salir del modo de publicación");
         // La interfaz móvil no siempre ofrece 'Crear'. Utilizamos el editor
         // original de Instagram con su versión web de escritorio, no una API.
         webView.getSettings().setUserAgentString(desktopUserAgent);
@@ -570,14 +525,12 @@ public final class MainActivity extends Activity {
             url.contains("/accounts/login") || url.contains("/challenge/")) return;
         if (++createAttempts > 14) {
             createPending = false;
-            currentSection.setText("  Publicar: tocá Crear (+) en la web de Instagram");
             return;
         }
         webView.evaluateJavascript(OPEN_CREATE_JS, result -> {
             if (!publishingMode) return;
             if ("true".equals(result)) {
                 createPending = false;
-                currentSection.setText("  Elegí fotos o videos y completá la publicación");
             }
         });
     }
@@ -598,9 +551,10 @@ public final class MainActivity extends Activity {
         createAttempts = 0;
         selectedUsername = "";
         currentPageKind = "";
-        publishButton.setText("＋ Publicar");
-        publishButton.setContentDescription("Crear publicación de Instagram");
-        subtitle.setText("Instagram, sin el ruido");
+        publishButton.setImageResource(R.drawable.ic_add);
+        updateNavigation();
+        publishButton.setContentDescription("Publicar");
+        publishButton.setTooltipText("Publicar");
         webView.getSettings().setUserAgentString(standardUserAgent);
         webView.getSettings().setLoadWithOverviewMode(true);
         if (destination == null || blockedRoute(Uri.parse(destination).getPath())) destination = INBOX;
@@ -608,55 +562,15 @@ public final class MainActivity extends Activity {
     }
 
     private void updateCurrentLabel(String url) {
-        if (publishingMode) {
-            subtitle.setText("Modo publicación · Instagram web");
-            if (createPending) currentSection.setText("  Publicar: tocá Crear (+) si no aparece solo");
-            return;
-        }
-        Uri uri;
-        try { uri = Uri.parse(url == null ? "" : url); }
-        catch (Exception e) { return; }
-        String path = uri.getPath();
+        String path = Uri.parse(url == null ? "" : url).getPath();
         if (path == null) path = "";
-        String user = usernameFromPath(path);
-        selectedUsername = user;
-        if (!user.isEmpty()) {
-            currentPageKind = "profile";
-            subtitle.setText("Viendo @" + user);
-            currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
-        } else if (path.equals("/explore/search") || path.equals("/explore/search/")) {
-            currentPageKind = "search";
-            subtitle.setText("Buscar en Instagram");
-            currentSection.setText("  Buscá por nombre o parte del usuario");
-        } else if (path.startsWith("/direct/")) {
-            currentPageKind = "messages";
-            subtitle.setText("Mensajes, sin distracciones");
-            currentSection.setText("  Mensajes privados · sin feed");
-        } else if ((path.equals("/notifications") || path.equals("/notifications/") || path.startsWith("/accounts/activity"))) {
-            currentPageKind = "activity";
-            subtitle.setText("Actividad de tu cuenta");
-            currentSection.setText("  Actualizaciones · sin feed");
-        } else if (path.startsWith("/stories/") && mayOpenProfileStory(path)) {
-            currentPageKind = "story";
-            subtitle.setText("Historia elegida · una sola");
-            currentSection.setText("  Volvé al perfil para elegir otra");
-        } else if (path.startsWith("/reel/") || path.startsWith("/stories/")) {
-            currentPageKind = "post";
-            subtitle.setText("Video compartido · uno solo");
-            currentSection.setText("  Sin swipe · sonido dentro del visor");
-        } else if (path.startsWith("/p/")) {
-            currentPageKind = "post";
-            subtitle.setText("Publicación · sin recomendaciones");
-            currentSection.setText("  Publicación · buscando el perfil de quien publicó");
-        } else if (path.startsWith("/accounts/login")) {
-            currentPageKind = "login";
-            subtitle.setText("Iniciá sesión en Instagram");
-            currentSection.setText("  Acceso directo a Instagram");
-        } else {
-            currentPageKind = "other";
-            subtitle.setText("Instagram, sin el ruido");
-            currentSection.setText("  Navegación intencional · sin Reels");
-        }
+        selectedUsername = usernameFromPath(path);
+        if (!selectedUsername.isEmpty()) currentPageKind = "profile";
+        else if (path.matches("^/explore/search/?$")) currentPageKind = "search";
+        else if (path.startsWith("/direct/")) currentPageKind = "messages";
+        else if (path.matches("^/(notifications|accounts/activity)/?$")) currentPageKind = "activity";
+        else currentPageKind = "other";
+        updateNavigation();
     }
 
     // Sólo una ruta con un segmento que tenga formato de usuario es un perfil.
@@ -701,21 +615,9 @@ public final class MainActivity extends Activity {
                               ("post".equals(type) ? author : "");
                 if (!user.isEmpty() && !user.matches("[A-Za-z0-9._]{1,30}")) user = "";
                 if ("profile".equals(type) || "post".equals(type)) {
-                    // Si no se detectó el autor, no reusar el usuario anterior.
                     selectedUsername = user;
                     currentPageKind = type;
-                    if ("profile".equals(type) && !user.isEmpty()) {
-                        subtitle.setText("Viendo @" + user);
-                        currentSection.setText("  Perfil: @" + user + " · tocá para abrir");
-                    } else if ("profile".equals(type)) {
-                        updateCurrentLabel(webView.getUrl());
-                    } else if (!user.isEmpty()) {
-                        subtitle.setText("Publicación de @" + user);
-                        currentSection.setText("  Autor: @" + user + " · tocá para ver su perfil");
-                    } else {
-                        subtitle.setText("Publicación · sin recomendaciones");
-                        currentSection.setText("  Tocá el nombre del autor en Instagram para ver su perfil");
-                    }
+                    updateNavigation();
                 } else if (!type.equals(currentPageKind)) {
                     updateCurrentLabel(webView.getUrl());
                 }
@@ -772,19 +674,17 @@ public final class MainActivity extends Activity {
             return;
         }
         String[] options = {
-            "Ver perfil del usuario actual", "Crear publicación (+)",
-            "¿Qué bloquea Calma?", "Volver a Mensajes", "Abrir Instagram en Firefox",
-            "Limpiar sesión de este cliente"
+            "Ver perfil actual", "Recargar", "Abrir en navegador",
+            "Acerca de Calma", "Cerrar sesión"
         };
         new AlertDialog.Builder(this).setTitle("Calma · opciones")
             .setItems(options, (dialog, choice) -> {
                 switch (choice) {
                     case 0: openSelectedProfile(); break;
-                    case 1: onPublishButton(); break;
-                    case 2: showAbout(); break;
-                    case 3: go(INBOX); break;
-                    case 4: openFirefox(); break;
-                    case 5: confirmLogout(); break;
+                    case 1: webView.reload(); break;
+                    case 2: openFirefox(); break;
+                    case 3: showAbout(); break;
+                    case 4: confirmLogout(); break;
                 }
             }).setNegativeButton("Cerrar", null).show();
     }
