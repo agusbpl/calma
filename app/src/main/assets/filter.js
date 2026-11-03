@@ -82,16 +82,16 @@
     /^porque sigues a/i, /^porque seguís a/i,
   ];
   function hideRecommendations() {
-    // Sólo eliminar bloques acotados; no ocultar una página entera por accidente.
+    // Ocultar sólo elementos identificados, nunca sus contenedores.
     const nodes = document.querySelectorAll('h2, h3, h4, span, strong, div');
     for (const el of nodes) {
       if (el.children.length > 0) continue;
       const text = (el.textContent || '').trim();
       if (text.length > 65 || !recommendations.some(re => re.test(text))) continue;
-      const block = el.closest('article, li, section');
-      if (block && block.textContent.length < 5000) {
-        block.style.setProperty('display', 'none', 'important');
-      }
+      // Un encabezado puede estar dentro de la sección que contiene TODA
+      // la página (perfiles y notificaciones reales). No inferir el bloque
+      // por cercanía ni longitud: ocultar únicamente la etiqueta reconocida.
+      el.style.setProperty('display', 'none', 'important');
     }
   }
   let scheduled = false;

@@ -1,5 +1,11 @@
 # Registro de cambios
 
+## 0.3.5 — Recomendaciones sin ocultar perfiles ni actividad
+
+- Diagnóstico con la sesión real en un teléfono físico: «Suggested for you» hacía que el filtro ocultara la sección completa de perfiles y notificaciones.
+- Se oculta únicamente la etiqueta reconocida, conservando el contenedor y su contenido. Algunas recomendaciones pueden permanecer visibles; el bloqueo de feed, Explorar y Reels sigue vigente.
+- Prueba de regresión con aparición tardía del encabezado y herramienta para verificar ambas rutas en la WebView real mediante ADB/DevTools.
+
 ## 0.3.4 — Perfiles y notificaciones sin pantalla vacía
 
 - El filtro de instalación oculta sólo el enlace/botón, sin ocultar su contenedor compartido con contenido de Instagram.

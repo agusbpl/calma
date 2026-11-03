@@ -1,6 +1,10 @@
-# calma. 0.3.4 — Instagram sin el ruido
+# calma. 0.3.5 — Instagram sin el ruido
 
 Cliente personal Android que utiliza **el sitio web de Instagram dentro de una WebView**. Sin servidor ni API privada. Prioriza mensajes, perfiles y la publicación intencional; permite updates e historias elegidas desde un perfil y bloquea el acceso al feed, Explorar y Reels. La sesión se guarda localmente en Android.
+
+## Corrección 0.3.5: verificada en teléfono con sesión real
+
+El filtro de recomendaciones ocultaba la sección completa del perfil o de notificaciones cuando aparecía «Suggested for you». Ahora oculta únicamente esa etiqueta. La causa se reprodujo con la APK 0.3.4 en un teléfono físico, restaurando la sección desde el depurador, y se verifica de nuevo con 0.3.5. Ver [pruebas de 0.3.5](entrega/Pruebas-0.3.5.md).
 
 ## Corrección 0.3.4: perfiles y updates visibles
 
@@ -40,9 +44,9 @@ elimina DRM ni restricciones del sitio.
 
 ## Instalar la última versión
 
-La entrega actual es **0.3.4** (versionCode 7): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
+La entrega actual es **0.3.5** (versionCode 8): [descargar Calma.apk](entrega/Calma.apk). Requiere Android 8.0 o posterior. Autorizá la instalación desde el navegador o administrador de archivos y abrí la app.
 
-Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.4](entrega/Pruebas-0.3.4.md) registra la corrección actual. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
+Para verificar el archivo, desde `entrega/` ejecutá `sha256sum -c Calma.apk.sha256`. El [informe de 0.3.5](entrega/Pruebas-0.3.5.md) registra la corrección actual. El [informe de 0.3.4](entrega/Pruebas-0.3.4.md) conserva las pruebas previas. El [informe de 0.3.3](entrega/Pruebas-0.3.3.md) registra las verificaciones actuales; el [informe original](entrega/Pruebas.md) y `entrega/evidencias/` conservan los resultados de 0.3.2. No se incluyen APK anteriores ni claves de firma.
 
 ## Cambios conservados de la versión 0.2
 
@@ -117,6 +121,7 @@ python tests/search.browser.py
 python tests/clip-return.browser.py
 python tests/profile-navigation.browser.py
 python tests/profile-stories.browser.py
+python tests/recommendations.browser.py
 ```
 
 Las pruebas de navegador requieren Python con Playwright y Chromium instalado en `/usr/bin/chromium`. Utilizan fixtures locales, sin iniciar sesión en Instagram.
@@ -156,4 +161,4 @@ El botón **← Chats** del visor y Atrás de Android cargan nuevamente la conve
 
 ## Versión conservada
 
-El repositorio contiene el código y la APK de 0.3.4; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.
+El repositorio contiene el código y la APK de 0.3.5; las evidencias originales de 0.3.2 se conservan como referencia histórica. Las entregas anteriores se eliminaron; [CHANGELOG.md](CHANGELOG.md) conserva el historial descriptivo. Los directorios de compilación y cachés están excluidos de Git.
